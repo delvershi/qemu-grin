@@ -160,7 +160,8 @@ void ptc_init(void) {
 
   if (cpu == NULL) {
     /* init guest base */
-    guest_base = 0xb0000000;
+   // guest_base = 0xb0000000;
+    guest_base = 0;
 
     /* init TCGContext */
     tcg_exec_init(0);
@@ -198,8 +199,10 @@ void ptc_init(void) {
     qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);
 
     initialized_state = *(container_of(cpu->env_ptr, CPU_STRUCT, env));
+   
+    tcg_prologue_init(&tcg_ctx);
   }
-
+  
   if (ptc_opcode_defs == NULL) {
     ptc_opcode_defs = (PTCOpcodeDef *) calloc(sizeof(PTCOpcodeDef), tcg_op_defs_max);
 
@@ -347,8 +350,13 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
 {
     CPUArchState *env = cpu->env_ptr;
     TranslationBlock *tb;
-    tb_page_addr_t phys_pc;
+    tb_page_addr_t phys_pc,phys_page2;
+    target_ulong virt_page2;
     int i = 0;
+
+    tcg_insn_unit *gen_code_buf;
+    int gen_code_size;
+
 
     phys_pc = get_page_addr_code(env, pc);
 
@@ -382,7 +390,60 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
 
     gen_intermediate_code(env, tb);
 
-    tb_link_page(tb, phys_pc, -1);
+
+    /* generate machine code */
+    gen_code_buf = tb->tc_ptr;
+    tb->tb_next_offset[0] = 0xffff;
+    tb->tb_next_offset[1] = 0xffff;
+    s->tb_next_offset = tb->tb_next_offset;
+
+//#ifdef USE_DIRECT_JUMP
+//    s->tb_jmp_offset = tb->tb_jmp_offset;
+//    s->tb_next = NULL;
+//#else
+//    s->tb_jmp_offset = NULL;
+//    s->tb_next = tb->tb_next;
+//#endif
+//
+//#ifdef CONFIG_PROFILER
+//    s->tb_count++;
+//    s->interm_time += profile_getclock() - ti;
+//    s->code_time -= profile_getclock();
+//#endif
+    gen_code_size = tcg_gen_code(s, gen_code_buf);
+//#ifdef CONFIG_PROFILER
+//    s->code_time += profile_getclock();
+//    s->code_in_len += tb->size;
+//    s->code_out_len += gen_code_size;
+//#endif
+//
+//#ifdef DEBUG_DISAS
+//    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) 
+    {
+        qemu_log("OUT: [size=%d]\n", gen_code_size);
+        log_disas(tb->tc_ptr, gen_code_size);
+        qemu_log("\n");
+        qemu_log_flush();
+    }
+//#endif
+    tcg_ctx.code_gen_ptr = (void *)(((uintptr_t)tcg_ctx.code_gen_ptr + 
+            gen_code_size + CODE_GEN_ALIGN - 1) & ~(CODE_GEN_ALIGN - 1));
+    /* end generate */
+
+    /* check next page if needed */
+    virt_page2 = (pc + tb->size - 1) & TARGET_PAGE_MASK;
+    phys_page2 = -1;
+    if ((pc & TARGET_PAGE_MASK) != virt_page2) 
+    {
+        phys_page2 = get_page_addr_code(env, virt_page2);
+    } 
+   // tb_link_page(tb, phys_pc, phys_page2);
+    {
+        qemu_log("OUT33: [size=%d]\n", gen_code_size);
+        log_disas(tb->tc_ptr, gen_code_size);
+        qemu_log("\n");
+        qemu_log_flush();
+    }
 
     return tb;
 }
@@ -413,10 +474,70 @@ void ptc_mmap(uint64_t virtual_address, const void *code, size_t code_size) {
   assert(false);
 }
 
+/* Execute a TB, and fix up the CPU state afterwards if necessary */
+static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
+{
+    CPUArchState *env = cpu->env_ptr;
+    uintptr_t next_tb;
+
+//#if defined(DEBUG_DISAS)
+//    if (qemu_loglevel_mask(CPU_LOG_TB_CPU)) 
+//    {
+//#if defined(TARGET_I386)
+//        log_cpu_state(cpu, CPU_DUMP_CCOP);
+//#elif defined(TARGET_M68K)
+//        /* ??? Should not modify env state for dumping.  */
+//        cpu_m68k_flush_flags(env, env->cc_op);
+//        env->cc_op = CC_OP_FLAGS;
+//        env->sr = (env->sr & 0xffe0) | env->cc_dest | (env->cc_x << 4);
+//        log_cpu_state(cpu, 0);
+//#else
+//        log_cpu_state(cpu, 0);
+//#endif
+//    }
+//#endif /* DEBUG_DISAS */
+    cpu->can_do_io = 0;
+
+    next_tb = tcg_qemu_tb_exec(env, tb_ptr);
+
+    cpu->can_do_io = 1;
+
+//    trace_exec_tb_exit((void *) (next_tb & ~TB_EXIT_MASK),
+//                       next_tb & TB_EXIT_MASK);
+
+//    if ((next_tb & TB_EXIT_MASK) > TB_EXIT_IDX1) {
+//        /* We didn't start executing this TB (eg because the instruction
+//         * counter hit zero); we must restore the guest PC to the address
+//         * of the start of the TB.
+//         */
+//        CPUClass *cc = CPU_GET_CLASS(cpu);
+//        TranslationBlock *tb = (TranslationBlock *)(next_tb & ~TB_EXIT_MASK);
+//        if (cc->synchronize_from_tb) {
+//            cc->synchronize_from_tb(cpu, tb);
+//        } else {
+//            assert(cc->set_pc);
+//            cc->set_pc(cpu, tb->pc);
+//        }
+//    }
+//
+//    if ((next_tb & TB_EXIT_MASK) == TB_EXIT_REQUESTED) {
+//        /* We were asked to stop executing TBs (probably a pending
+//         * interrupt. We've now stopped, so clear the flag.
+//         */
+//        cpu->tcg_exit_req = 0;
+//    }
+
+    return next_tb;
+
+}
+
 /* TODO: error management */
 size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions) {
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
+
+    uint8_t *tc_ptr;
+    CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     target_ulong temp;
     int flags = 0;
@@ -428,7 +549,12 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions)
 
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0);
 
-    // tcg_dump_ops(s);
+   // tcg_dump_ops(s);
+    printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
+   
+    tc_ptr = tb->tc_ptr;
+    cpu_tb_exec(cpu, tc_ptr);
+    printf("eip: %lx\n",env->eip);
 
     dump_tinycode(s, instructions);
 

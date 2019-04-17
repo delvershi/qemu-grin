@@ -369,7 +369,8 @@ void tcg_prologue_init(TCGContext *s)
     flush_icache_range((uintptr_t)s->code_buf, (uintptr_t)s->code_ptr);
 
 #ifdef DEBUG_DISAS
-    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) {
+    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) 
+    {
         size_t size = tcg_current_code_size(s);
         qemu_log("PROLOGUE: [size=%zu]\n", size);
         log_disas(s->code_buf, size);
