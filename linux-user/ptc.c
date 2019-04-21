@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <sys/mman.h>
 
+#include<sys/syscall.h>
+
 #include "qemu.h"
 #include "qemu-common.h"
 #include "cpu.h"
@@ -61,9 +63,80 @@ int singlestep = 0;
 unsigned long guest_base = 0;
 unsigned long mmap_min_addr = 4096;
 
+//////////////////////////////////////////////////
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
+
+///* Wait for pending exclusive operations to complete.  The exclusive lock
+//   must be held.  */
+//static inline void exclusive_idle(void)
+//{   
+//    while (pending_cpus) {
+//        pthread_cond_wait(&exclusive_resume, &exclusive_lock);
+//    }
+//}
+//
+///* Start an exclusive operation.
+//   Must only be called from outside cpu_arm_exec.   */
+//static inline void start_exclusive(void)
+//{
+//    CPUState *other_cpu;
+//
+//    pthread_mutex_lock(&exclusive_lock);
+//    exclusive_idle();
+//
+//    pending_cpus = 1;
+//    /* Make all other cpus stop executing.  */
+//    CPU_FOREACH(other_cpu) {
+//        if (other_cpu->running) {
+//            pending_cpus++;
+//            cpu_exit(other_cpu);
+//        }
+//    }
+//    if (pending_cpus > 1) {
+//        pthread_cond_wait(&exclusive_cond, &exclusive_lock);
+//    }
+//}
+//
+///* Finish an exclusive operation.  */
+//static inline void __attribute__((unused)) end_exclusive(void)
+//{
+//    pending_cpus = 0;
+//    pthread_cond_broadcast(&exclusive_resume);
+//    pthread_mutex_unlock(&exclusive_lock);
+//}
+
+
+void task_settid(TaskState *ts)
+{
+    if (ts->ts_tid == 0) {
+        ts->ts_tid = (pid_t)syscall(SYS_gettid);
+    }
+}
+
+//void stop_all_tasks(void)
+//{
+//    /*
+//     * We trust that when using NPTL, start_exclusive()
+//     * handles thread stopping correctly.
+//     */
+//    start_exclusive();
+//}
+
+/* Assumes contents are already zeroed.  */
+void init_task_state(TaskState *ts)
+{
+    int i;
+ 
+    ts->used = 1;
+    ts->first_free = ts->sigqueue_table;
+    for (i = 0; i < MAX_SIGQUEUE_SIZE - 1; i++) {
+        ts->sigqueue_table[i].next = &ts->sigqueue_table[i + 1];
+    }
+    ts->sigqueue_table[i].next = NULL;
+}
+///////////////////////////////////////////////////////////
 
 abi_long do_brk(abi_ulong new_brk) { exit(-1); }
 
@@ -172,7 +245,7 @@ void ptc_init(void) {
    int target_argc;
    struct image_info info1, *info = &info1;
    struct linux_binprm bprm;
-//   TaskState *ts;
+   TaskState *ts;
    int ret,execfd;
    /* Zero out image_info */
    memset(info, 0, sizeof(struct image_info));
@@ -258,14 +331,14 @@ void ptc_init(void) {
 //    }
     target_argv[0] ="hello";
     target_argv[0] = NULL;
-//    ts = g_malloc0 (sizeof(TaskState));
-//    init_task_state(ts);
+    ts = g_malloc0 (sizeof(TaskState));
+    init_task_state(ts);
 
     /* build Task State */
-//    ts->info = info;
-//    ts->bprm = &bprm;
-//    cpu->opaque = ts;
-//    task_settid(ts);
+    ts->info = info;
+    ts->bprm = &bprm;
+    cpu->opaque = ts;
+    task_settid(ts);
 
     execfd = qemu_getauxval(AT_EXECFD);
     if (execfd == 0) {
