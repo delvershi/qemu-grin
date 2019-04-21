@@ -247,12 +247,14 @@ void ptc_init(void) {
    struct linux_binprm bprm;
    TaskState *ts;
    int ret,execfd;
-   /* Zero out image_info */
-   memset(info, 0, sizeof(struct image_info));
-   memset(&bprm, 0, sizeof (bprm));
    const char * filename = "hello";
    envlist_t *envlist;
    struct target_pt_regs regs1, *regs = &regs1;
+   
+   memset(regs,0,sizeof(struct target_pt_regs));
+   /* Zero out image_info */
+   memset(info, 0, sizeof(struct image_info));
+   memset(&bprm, 0, sizeof (bprm));
 //   CPUState *cpu = CPU(x86_env_get_cpu(env));
 //////
 
@@ -362,7 +364,7 @@ void ptc_init(void) {
     free(target_environ);
 ////////////////////////////////
 
-    initialize_cpu_state(cpu->env_ptr);
+    initialize_cpu_state(cpu->env_ptr,regs);
 
     /* set logging for tiny code dumping */
     qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);

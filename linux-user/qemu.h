@@ -461,7 +461,7 @@ static inline void *lock_user_string(abi_ulong guest_addr)
 #include "target_structs.h"
 
 #ifdef CONFIG_LIBTINYCODE
-void initialize_cpu_state(CPUArchState *env);
+void initialize_cpu_state(CPUArchState *env,struct target_pt_regs *regs);
 #endif
 
 #endif /* QEMU_H */

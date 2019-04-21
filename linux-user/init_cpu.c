@@ -15,12 +15,12 @@
 /* Code copy/pasted from main.c */
 
 /* Beware of the XXXs */
-void initialize_cpu_state(CPUArchState *env) {
+void initialize_cpu_state(CPUArchState *env,struct target_pt_regs *regs) {
  
-   struct target_pt_regs regs1, *regs = &regs1;
+//   struct target_pt_regs regs1, *regs = &regs1;
 
     /* Zero out regs */
-    memset(regs, 0, sizeof(struct target_pt_regs));
+//    memset(regs, 0, sizeof(struct target_pt_regs));
 
 #if defined(TARGET_I386)
     env->cr[0] = CR0_PG_MASK | CR0_WP_MASK | CR0_PE_MASK;
