@@ -16,7 +16,9 @@
 
 /* Beware of the XXXs */
 void initialize_cpu_state(CPUArchState *env) {
-    struct target_pt_regs regs1, *regs = &regs1;
+ 
+   struct target_pt_regs regs1, *regs = &regs1;
+
     /* Zero out regs */
     memset(regs, 0, sizeof(struct target_pt_regs));
 

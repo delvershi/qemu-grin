@@ -13,6 +13,10 @@
 
 #include "exec/exec-all.h"
 
+
+#include "qemu/envlist.h"
+
+
 /* Check coherence of the values of the constants between TCG_* and
    PTC_*. Sadly we have to use this dirty division by zero trick to
    trigger an error from the compiler, in fact, due to using enums and
@@ -56,6 +60,10 @@ unsigned long reserved_va = 0;
 int singlestep = 0;
 unsigned long guest_base = 0;
 unsigned long mmap_min_addr = 4096;
+
+int have_guest_base = 0;
+unsigned long guest_stack_size = 8*1024*1024UL;
+THREAD CPUState *thread_cpu;
 
 abi_long do_brk(abi_ulong new_brk) { exit(-1); }
 
@@ -158,6 +166,24 @@ static void add_helper(gpointer key, gpointer value, gpointer user_data) {
 void ptc_init(void) {
   int i = 0;
 
+//////
+   char **target_environ, **wrk;
+   char **target_argv;
+   int target_argc;
+   struct image_info info1, *info = &info1;
+   struct linux_binprm bprm;
+//   TaskState *ts;
+   int ret,execfd;
+   /* Zero out image_info */
+   memset(info, 0, sizeof(struct image_info));
+   memset(&bprm, 0, sizeof (bprm));
+   const char * filename = "hello";
+   envlist_t *envlist;
+   struct target_pt_regs regs1, *regs = &regs1;
+//   CPUState *cpu = CPU(x86_env_get_cpu(env));
+//////
+
+
   if (cpu == NULL) {
     /* init guest base */
    // guest_base = 0xb0000000;
@@ -193,14 +219,83 @@ void ptc_init(void) {
     /* Reset CPU */
     cpu_reset(cpu);
 
+    tcg_prologue_init(&tcg_ctx);
+
+////////////////////////////////
+
+    thread_cpu = cpu;
+
+    if ((envlist = envlist_create()) == NULL) {
+        (void) fprintf(stderr, "Unable to allocate envlist\n");
+        exit(1);
+    }
+    /* add current environment into the list */
+    for (wrk = environ; *wrk != NULL; wrk++) {
+        (void) envlist_setenv(envlist, *wrk);
+    }
+
+    target_environ = envlist_to_environ(envlist, NULL);
+    envlist_free(envlist);
+
+    /*
+     * Prepare copy of argv vector for target.
+     */
+    target_argc = 1;
+    target_argv = calloc(target_argc + 1, sizeof (char *));
+    if (target_argv == NULL) {
+	(void) fprintf(stderr, "Unable to allocate memory for target_argv\n");
+	exit(1);
+    }
+    /*
+     * If argv0 is specified (using '-0' switch) we replace
+     * argv[0] pointer with the given one.
+     */
+
+//    i = 0;
+
+//    if (argv0 != NULL) {
+//        target_argv[i++] = strdup(argv0);
+//    }
+    target_argv[0] ="hello";
+    target_argv[0] = NULL;
+//    ts = g_malloc0 (sizeof(TaskState));
+//    init_task_state(ts);
+
+    /* build Task State */
+//    ts->info = info;
+//    ts->bprm = &bprm;
+//    cpu->opaque = ts;
+//    task_settid(ts);
+
+    execfd = qemu_getauxval(AT_EXECFD);
+    if (execfd == 0) {
+        execfd = open(filename, O_RDONLY);
+        if (execfd < 0) {
+            printf("Error while loading %s: %s\n", filename, strerror(errno));
+            _exit(1);
+        }
+    }
+
+    ret = loader_exec(execfd, filename, target_argv, target_environ, regs,
+        info, &bprm);
+    if (ret != 0) {
+        printf("Error while loading %s: %s\n", filename, strerror(-ret));
+        _exit(1);
+    }
+    for (wrk = target_environ; *wrk; wrk++) {
+        free(*wrk);
+    }
+
+    free(target_environ);
+////////////////////////////////
+
     initialize_cpu_state(cpu->env_ptr);
 
     /* set logging for tiny code dumping */
     qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);
 
-    initialized_state = *(container_of(cpu->env_ptr, CPU_STRUCT, env));
-   
-    tcg_prologue_init(&tcg_ctx);
+    initialized_state = *(container_of(cpu->env_ptr, CPU_STRUCT, env)); 
+
   }
   
   if (ptc_opcode_defs == NULL) {

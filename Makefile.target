@@ -130,6 +130,9 @@ ifdef CONFIG_LIBTINYCODE
 
 QEMU_LDFLAGS+=-shared
 
+obj-y += linux-user/elfload.o 
+obj-y += linux-user/linuxload.o
+
 endif #CONFIG_LIBTINYCODE
 
 #########################################################
