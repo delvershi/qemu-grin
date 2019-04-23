@@ -567,14 +567,14 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->tb_next_offset[1] = 0xffff;
     s->tb_next_offset = tb->tb_next_offset;
 
-//#ifdef USE_DIRECT_JUMP
-//    s->tb_jmp_offset = tb->tb_jmp_offset;
-//    s->tb_next = NULL;
-//#else
-//    s->tb_jmp_offset = NULL;
-//    s->tb_next = tb->tb_next;
-//#endif
-//
+#ifdef USE_DIRECT_JUMP
+    s->tb_jmp_offset = tb->tb_jmp_offset;
+    s->tb_next = NULL;
+#else
+    s->tb_jmp_offset = NULL;
+    s->tb_next = tb->tb_next;
+#endif
+
 //#ifdef CONFIG_PROFILER
 //    s->tb_count++;
 //    s->interm_time += profile_getclock() - ti;
@@ -607,7 +607,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     {
         phys_page2 = get_page_addr_code(env, virt_page2);
     } 
-   // tb_link_page(tb, phys_pc, phys_page2);
+    tb_link_page(tb, phys_pc, phys_page2);
     {
         qemu_log("OUT33: [size=%d]\n", gen_code_size);
         log_disas(tb->tc_ptr, gen_code_size);

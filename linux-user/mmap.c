@@ -294,9 +294,6 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
          *  - mremap() with MREMAP_FIXED flag
          *  - shmat() with SHM_REMAP flag
          */
-        unsigned long nnn = GUEST_BASE;
-        unsigned long ccc = (unsigned long)(target_ulong)addr;
-        void* ppp = (void *)((unsigned long)(target_ulong)addr+nnn); 
         ptr = mmap(g2h(addr), size, PROT_NONE,
                    MAP_ANONYMOUS|MAP_PRIVATE|MAP_NORESERVE, -1, 0);
 
