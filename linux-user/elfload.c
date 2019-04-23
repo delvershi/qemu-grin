@@ -1756,46 +1756,46 @@ static void probe_guest_base(const char *image_name,
      * it explicitly, and set guest_base appropriately.
      * In case of error we will print a suitable message and exit.
      */
-#if defined(CONFIG_USE_GUEST_BASE)
-    const char *errmsg;
-    if (!have_guest_base && !reserved_va) {
-        unsigned long host_start, real_start, host_size;
-
-        /* Round addresses to page boundaries.  */
-        loaddr &= qemu_host_page_mask;
-        hiaddr = HOST_PAGE_ALIGN(hiaddr);
-
-        if (loaddr < mmap_min_addr) {
-            host_start = HOST_PAGE_ALIGN(mmap_min_addr);
-        } else {
-            host_start = loaddr;
-            if (host_start != loaddr) {
-                errmsg = "Address overflow loading ELF binary";
-                goto exit_errmsg;
-            }
-        }
-        host_size = hiaddr - loaddr;
-
-        /* Setup the initial guest memory space with ranges gleaned from
-         * the ELF image that is being loaded.
-         */
-        real_start = init_guest_space(host_start, host_size, loaddr, false);
-        if (real_start == (unsigned long)-1) {
-            errmsg = "Unable to find space for application";
-            goto exit_errmsg;
-        }
-        guest_base = real_start - loaddr;
-
-        qemu_log("Relocating guest address space from 0x"
-                 TARGET_ABI_FMT_lx " to 0x%lx\n",
-                 loaddr, real_start);
-    }
-    return;
-
-exit_errmsg:
-    fprintf(stderr, "%s: %s\n", image_name, errmsg);
-    exit(-1);
-#endif
+//#if defined(CONFIG_USE_GUEST_BASE)
+//    const char *errmsg;
+//    if (!have_guest_base && !reserved_va) {
+//        unsigned long host_start, real_start, host_size;
+//
+//        /* Round addresses to page boundaries.  */
+//        loaddr &= qemu_host_page_mask;
+//        hiaddr = HOST_PAGE_ALIGN(hiaddr);
+//
+//        if (loaddr < mmap_min_addr) {
+//            host_start = HOST_PAGE_ALIGN(mmap_min_addr);
+//        } else {
+//            host_start = loaddr;
+//            if (host_start != loaddr) {
+//                errmsg = "Address overflow loading ELF binary";
+//                goto exit_errmsg;
+//            }
+//        }
+//        host_size = hiaddr - loaddr;
+//
+//        /* Setup the initial guest memory space with ranges gleaned from
+//         * the ELF image that is being loaded.
+//         */
+//        real_start = init_guest_space(host_start, host_size, loaddr, false);
+//        if (real_start == (unsigned long)-1) {
+//            errmsg = "Unable to find space for application";
+//            goto exit_errmsg;
+//        }
+//        guest_base = real_start - loaddr;
+//
+//        qemu_log("Relocating guest address space from 0x"
+//                 TARGET_ABI_FMT_lx " to 0x%lx\n",
+//                 loaddr, real_start);
+//    }
+//    return;
+//
+//exit_errmsg:
+//    fprintf(stderr, "%s: %s\n", image_name, errmsg);
+//    exit(-1);
+//#endif
 }
 
 
