@@ -702,7 +702,8 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
 }
 
 /* TODO: error management */
-size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions) {
+//size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions) {
+unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions) {
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
 
@@ -728,7 +729,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions)
 
     dump_tinycode(s, instructions);
 
-    return (size_t) tb->size;
+   // return (size_t) tb->size;
+    return env->eip;
 }
 
 const char *ptc_get_condition_name(PTCCondition condition) {

@@ -245,7 +245,8 @@ EXPORTED(PTCLoadStoreArg, ptc_parse_load_store_arg, (PTCInstructionArg arg));
 EXPORTED(unsigned, ptc_get_arg_label_id, (PTCInstructionArg arg));
 // EXPORTED(size_t, ptc_translate, (long long va, const void *code, size_t code_size, PTCInstructionList *instructions));
 EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t code_size));
-EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions));
+//EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions));
+EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions));
 
 #undef EXPORTED
 
