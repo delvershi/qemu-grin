@@ -268,6 +268,8 @@ typedef struct {
   intptr_t exception_index;
   uint8_t *initialized_env;
 
+  int32_t *exception_syscall;
+
 } PTCInterface;
 
 BOTH(int, ptc_load, (void *handle, PTCInterface *output));

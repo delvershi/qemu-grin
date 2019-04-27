@@ -7121,9 +7121,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         gen_update_cc_op(s);
         gen_jmp_im(pc_start - s->cs_base);
         gen_helper_syscall(cpu_env, tcg_const_i32(s->pc - pc_start));
-#ifndef CONFIG_LIBTINYCODE
+//#ifndef CONFIG_LIBTINYCODE
         gen_eob(s);
-#endif
+//#endif
         break;
     case 0x107: /* sysret */
         if (!s->pe) {

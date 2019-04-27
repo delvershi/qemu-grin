@@ -161,6 +161,8 @@ PTCOpcodeDef *ptc_opcode_defs;
 PTCHelperDef *ptc_helper_defs;
 unsigned ptc_helper_defs_size;
 
+int32_t *ptc_exception_syscall;
+
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
 
@@ -220,6 +222,8 @@ int ptc_load(void *handle, PTCInterface *output) {
   result.helper_defs = ptc_helper_defs;
   result.helper_defs_size = ptc_helper_defs_size;
   result.initialized_env = (uint8_t *) &initialized_state.env;
+  
+  result.exception_syscall = ptc_exception_syscall;
 
   *output = result;
 
@@ -370,6 +374,8 @@ void ptc_init(void) {
     qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);
 
     initialized_state = *(container_of(cpu->env_ptr, CPU_STRUCT, env)); 
+   
+    ptc_exception_syscall = &(cpu->exception_index);
 
   }
   
