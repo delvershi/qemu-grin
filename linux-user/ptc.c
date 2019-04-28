@@ -309,8 +309,6 @@ void ptc_init(void) {
     /* Reset CPU */
     cpu_reset(cpu);
 
-    tcg_prologue_init(&tcg_ctx);
-
 ////////////////////////////////
 
     thread_cpu = cpu;
@@ -377,12 +375,18 @@ void ptc_init(void) {
     }
 
     free(target_environ);
+
+    target_set_brk(info->brk);
+    syscall_init();
+    signal_init();
 ////////////////////////////////
+
+    tcg_prologue_init(&tcg_ctx);
 
     initialize_cpu_state(cpu->env_ptr,regs);
 
     /* set logging for tiny code dumping */
-    qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);
+    //qemu_set_log(CPU_LOG_TB_OP | CPU_LOG_TB_OP_OPT);
 
     initialized_state = *(container_of(cpu->env_ptr, CPU_STRUCT, env)); 
    
@@ -604,15 +608,15 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
 //    s->code_out_len += gen_code_size;
 //#endif
 //
-//#ifdef DEBUG_DISAS
-//    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) 
+#ifdef DEBUG_DISAS
+    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) 
     {
         qemu_log("OUT: [size=%d]\n", gen_code_size);
         log_disas(tb->tc_ptr, gen_code_size);
         qemu_log("\n");
         qemu_log_flush();
     }
-//#endif
+#endif
     tcg_ctx.code_gen_ptr = (void *)(((uintptr_t)tcg_ctx.code_gen_ptr + 
             gen_code_size + CODE_GEN_ALIGN - 1) & ~(CODE_GEN_ALIGN - 1));
     /* end generate */
@@ -625,12 +629,6 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
         phys_page2 = get_page_addr_code(env, virt_page2);
     } 
     tb_link_page(tb, phys_pc, phys_page2);
-    {
-        qemu_log("OUT33: [size=%d]\n", gen_code_size);
-        log_disas(tb->tc_ptr, gen_code_size);
-        qemu_log("\n");
-        qemu_log_flush();
-    }
 
     return tb;
 }
@@ -738,11 +736,12 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0);
 
    // tcg_dump_ops(s);
-    printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
+   // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
    
     tc_ptr = tb->tc_ptr;
     cpu_tb_exec(cpu, tc_ptr);
-    printf("eip: %lx\n",env->eip);
+   // printf("eip: %lx\n",env->eip);
+   // printf("exception_next_eip: %lx\n",env->exception_next_eip);
 
     dump_tinycode(s, instructions);
 
@@ -750,7 +749,7 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
     return env->eip;
 }
 
-void ptc_do_syscall2(void){
+unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
     
     env->regs[R_EAX] = do_syscall(env,
@@ -762,8 +761,10 @@ void ptc_do_syscall2(void){
 				  env->regs[8],
 				  env->regs[9],
 				  0,0);
-   env->eip = env->exception_next_eip;
-   cpu->exception_index = -1; 
+    env->eip = env->exception_next_eip;
+    cpu->exception_index = -1; 
+    
+    return env->eip; 
 }
 
 const char *ptc_get_condition_name(PTCCondition condition) {

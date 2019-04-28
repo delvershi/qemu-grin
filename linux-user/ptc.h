@@ -247,7 +247,7 @@ EXPORTED(unsigned, ptc_get_arg_label_id, (PTCInstructionArg arg));
 EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t code_size));
 //EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions));
 EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions));
-EXPORTED(void, ptc_do_syscall2, (void));
+EXPORTED(unsigned long, ptc_do_syscall2, (void));
 
 #undef EXPORTED
 
