@@ -955,7 +955,9 @@ void helper_syscall(CPUX86State *env, int next_eip_addend)
 
     cs->exception_index = EXCP_SYSCALL;
     env->exception_next_eip = env->eip + next_eip_addend;
-//    cpu_loop_exit(cs);
+#ifndef CONFIG_LIBTINYCODE
+    cpu_loop_exit(cs);
+#endif
 }
 #else
 void helper_syscall(CPUX86State *env, int next_eip_addend)

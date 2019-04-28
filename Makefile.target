@@ -132,6 +132,9 @@ QEMU_LDFLAGS+=-shared
 
 obj-y += linux-user/elfload.o 
 obj-y += linux-user/linuxload.o
+obj-y += linux-user/syscall2.o
+obj-y += linux-user/signal.o
+obj-y += linux-user/strace.o
 
 endif #CONFIG_LIBTINYCODE
 

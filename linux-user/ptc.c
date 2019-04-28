@@ -67,6 +67,16 @@ unsigned long mmap_min_addr = 4096;
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
+char *exec_path;
+
+void gemu_log(const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+}
 
 ///* Wait for pending exclusive operations to complete.  The exclusive lock
 //   must be held.  */
@@ -115,14 +125,14 @@ void task_settid(TaskState *ts)
     }
 }
 
-//void stop_all_tasks(void)
-//{
+void stop_all_tasks(void)
+{
 //    /*
 //     * We trust that when using NPTL, start_exclusive()
 //     * handles thread stopping correctly.
 //     */
 //    start_exclusive();
-//}
+}
 
 /* Assumes contents are already zeroed.  */
 void init_task_state(TaskState *ts)
@@ -138,7 +148,7 @@ void init_task_state(TaskState *ts)
 }
 ///////////////////////////////////////////////////////////
 
-abi_long do_brk(abi_ulong new_brk) { exit(-1); }
+//abi_long do_brk(abi_ulong new_brk) { exit(-1); }
 
 void cpu_list_unlock(void) { /* exit(-1); */ }
 void cpu_list_lock(void) { /* exit(-1); */ }
@@ -217,6 +227,7 @@ int ptc_load(void *handle, PTCInterface *output) {
   result.mmap = &ptc_mmap;
   result.translate = &ptc_translate;
   result.disassemble = &ptc_disassemble;
+  result.do_syscall2 = &ptc_do_syscall2;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -737,6 +748,22 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
 
    // return (size_t) tb->size;
     return env->eip;
+}
+
+void ptc_do_syscall2(void){
+    CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+    
+    env->regs[R_EAX] = do_syscall(env,
+				  env->regs[R_EAX],
+				  env->regs[R_EDI],
+				  env->regs[R_ESI],
+				  env->regs[R_EDX],
+				  env->regs[10],
+				  env->regs[8],
+				  env->regs[9],
+				  0,0);
+   env->eip = env->exception_next_eip;
+   cpu->exception_index = -1; 
 }
 
 const char *ptc_get_condition_name(PTCCondition condition) {
