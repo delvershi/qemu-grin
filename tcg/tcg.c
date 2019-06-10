@@ -2296,11 +2296,11 @@ static inline int tcg_gen_code_common(TCGContext *s,
     int oi, oi_next;
 
 #ifdef DEBUG_DISAS
-    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP))) {
-        qemu_log("OP:\n");
-        tcg_dump_ops(s);
-        qemu_log("\n");
-    }
+//    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP))) {
+//        qemu_log("OP:\n");
+//        tcg_dump_ops(s);
+//        qemu_log("\n");
+//    }
 #endif
 
 #ifdef CONFIG_PROFILER
@@ -2323,11 +2323,11 @@ static inline int tcg_gen_code_common(TCGContext *s,
 #endif
 
 #ifdef DEBUG_DISAS
-    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT))) {
-        qemu_log("OP after optimization and liveness analysis:\n");
-        tcg_dump_ops(s);
-        qemu_log("\n");
-    }
+//    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT))) {
+//        qemu_log("OP after optimization and liveness analysis:\n");
+//        tcg_dump_ops(s);
+//        qemu_log("\n");
+//    }
 #endif
 
     tcg_reg_alloc_start(s);
