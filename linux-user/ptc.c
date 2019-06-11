@@ -470,6 +470,8 @@ static PTCInstructionList dump_tinycode(TCGContext *s) {
     for (oi = s->gen_first_op_idx; oi >= 0; oi = op->next) {
       result.instruction_count++;
 
+     // printf("oi: %d\n",oi);
+
       op = &s->gen_op_buf[oi];
       c = op->opc;
       def = &tcg_op_defs[c];
@@ -489,6 +491,9 @@ static PTCInstructionList dump_tinycode(TCGContext *s) {
     /* Copy the temp values */
     result.total_temps = s->nb_temps;
     result.global_temps = s->nb_globals;
+
+  //  printf("nb_temps: %d  nb_globals: %d\n",s->nb_temps,s->nb_globals);
+
     result.temps = (PTCTemp *) calloc(sizeof(PTCTemp), result.total_temps);
 
     for (oi = 0; oi < s->nb_temps; oi++)
@@ -750,7 +755,7 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
    // printf("eip: %lx\n",env->eip);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
 
-   // exit(1);
+    exit(1);
 
    // return (size_t) tb->size;
     return env->eip;
