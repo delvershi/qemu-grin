@@ -165,7 +165,7 @@ int cpu_get_pic_interrupt(CPUX86State *env)
 
 #endif
 
-static void dump_tinycode(TCGContext *s, PTCInstructionList *instructions);
+static PTCInstructionList dump_tinycode(TCGContext *s);
 
 PTCOpcodeDef *ptc_opcode_defs;
 PTCHelperDef *ptc_helper_defs;
@@ -453,7 +453,7 @@ static PTCTemp copy_temp(TCGTemp original) {
   return result;
 }
 
-static void dump_tinycode(TCGContext *s, PTCInstructionList *instructions) {
+static PTCInstructionList dump_tinycode(TCGContext *s) {
     TCGOp *op = NULL;
     int oi = 0;
     int j = 0;
@@ -529,7 +529,8 @@ static void dump_tinycode(TCGContext *s, PTCInstructionList *instructions) {
       arguments_count += total_new;
     }
 
-    *instructions = result;
+   // *instructions = result;
+    return result;
 }
 
 extern void tb_link_page(TranslationBlock *tb, tb_page_addr_t phys_pc,
@@ -537,7 +538,8 @@ extern void tb_link_page(TranslationBlock *tb, tb_page_addr_t phys_pc,
 
 static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
                                      target_ulong pc, target_ulong cs_base,
-                                     int flags, int cflags)
+                                     int flags, int cflags,
+                                     PTCInstructionList *instructions)
 {
     CPUArchState *env = cpu->env_ptr;
     TranslationBlock *tb;
@@ -548,6 +550,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tcg_insn_unit *gen_code_buf;
     int gen_code_size;
 
+    PTCInstructionList instructions1;
 
     phys_pc = get_page_addr_code(env, pc);
 
@@ -582,6 +585,8 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     gen_intermediate_code(env, tb);
 
     tcg_dump_ops(s);
+    instructions1 = dump_tinycode(s);
+    *instructions = instructions1;
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
@@ -723,6 +728,8 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
 
+    
+
     uint8_t *tc_ptr;
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
@@ -734,7 +741,7 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
     flags |= FLAG_MASK_32 | FLAG_MASK_64;
 #endif
 
-    tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0);
+    tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
 
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
    
@@ -743,9 +750,7 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
    // printf("eip: %lx\n",env->eip);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
 
-    dump_tinycode(s, instructions);
-
-    exit(1);
+   // exit(1);
 
    // return (size_t) tb->size;
     return env->eip;
