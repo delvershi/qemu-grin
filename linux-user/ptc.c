@@ -728,12 +728,10 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
 }
 
 /* TODO: error management */
-//size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructionsi, uint64_t *dymvirtual_address) {
-unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t * dymvirtual_address) {
+size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t *dymvirtual_address) {
+//unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t * dymvirtual_address) {
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
-
-    
 
     uint8_t *tc_ptr;
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
@@ -755,11 +753,11 @@ unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instru
    // printf("eip: %lx\n",env->eip);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
 
-
     *dymvirtual_address = env->eip;
-    exit(1);
-   // return (size_t) tb->size;
-    return env->eip;
+  //  exit(1);
+
+    return (size_t) tb->size;
+   // return env->eip;
 }
 
 unsigned long ptc_do_syscall2(void){
