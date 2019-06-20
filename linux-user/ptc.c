@@ -589,7 +589,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
 
     gen_intermediate_code(env, tb);
 
-    tcg_dump_ops(s);
+   // tcg_dump_ops(s);
     instructions1 = dump_tinycode(s);
     *instructions = instructions1;
 
