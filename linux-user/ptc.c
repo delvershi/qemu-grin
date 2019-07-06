@@ -345,7 +345,7 @@ void ptc_init(void) {
 //        target_argv[i++] = strdup(argv0);
 //    }
     target_argv[0] ="hello";
-    target_argv[0] = NULL;
+    target_argv[target_argc] = NULL;
     ts = g_malloc0 (sizeof(TaskState));
     init_task_state(ts);
 
