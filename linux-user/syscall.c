@@ -5596,7 +5596,7 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
     struct stat st;
     struct statfs stfs;
     void *p;
-
+    
 #ifdef DEBUG
     gemu_log("syscall %d", num);
 #endif
