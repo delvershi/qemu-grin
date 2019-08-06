@@ -237,7 +237,7 @@ extern unsigned ptc_helper_defs_size;
 #define EXPORTED(ret, name, params) FUNC_PTR(ret, name, params)
 #endif
 
-EXPORTED(void, ptc_init, (void));
+EXPORTED(void, ptc_init, (const char *filename));
 EXPORTED(void, ptc_disassemble, (FILE *output, uint32_t buffer, size_t buffer_size, int max));
 EXPORTED(const char *, ptc_get_condition_name, (PTCCondition condition));
 EXPORTED(const char *, ptc_get_load_store_name, (PTCLoadStoreType condition));
@@ -275,7 +275,7 @@ typedef struct {
 
 } PTCInterface;
 
-BOTH(int, ptc_load, (void *handle, PTCInterface *output));
+BOTH(int, ptc_load, (void *handle, PTCInterface *output, const char* ptc_filename));
 
 /* Helper inline functions */
 

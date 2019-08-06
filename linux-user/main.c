@@ -34,7 +34,7 @@
 #include "qemu/envlist.h"
 #include "elf.h"
 
-char *exec_path;
+const char *exec_path;
 
 int singlestep;
 const char *filename;
@@ -3866,7 +3866,6 @@ int main(int argc, char **argv, char **envp)
     int i;
     int ret;
     int execfd;
-
     module_call_init(MODULE_INIT_QOM);
 
     if ((envlist = envlist_create()) == NULL) {

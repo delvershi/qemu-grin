@@ -137,7 +137,7 @@ typedef struct TaskState {
     int signal_pending; /* non zero if a signal may be pending */
 } __attribute__((aligned(16))) TaskState;
 
-extern char *exec_path;
+extern const char *exec_path;
 void init_task_state(TaskState *ts);
 void task_settid(TaskState *);
 void stop_all_tasks(void);

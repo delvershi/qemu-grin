@@ -67,7 +67,7 @@ unsigned long mmap_min_addr = 4096;
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
-char *exec_path;
+const char *exec_path;
 
 void gemu_log(const char *fmt, ...)
 {
@@ -196,11 +196,11 @@ static AddressRange ranges[MAX_RANGES];
 
 static CPU_STRUCT initialized_state;
 
-int ptc_load(void *handle, PTCInterface *output) {
+int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
 
   PTCInterface result = { 0 };
 
-  ptc_init();
+  ptc_init(ptc_filename);
 
 #if defined(TARGET_X86_64) || defined(TARGET_I386)
   result.pc = offsetof(CPUX86State, eip);
@@ -251,7 +251,7 @@ static void add_helper(gpointer key, gpointer value, gpointer user_data) {
   ptc_helper_defs[index].flags = helper->flags;
 }
 
-void ptc_init(void) {
+void ptc_init(const char *filename) {
   int i = 0;
 
 //////
@@ -262,7 +262,6 @@ void ptc_init(void) {
    struct linux_binprm bprm;
    TaskState *ts;
    int ret,execfd;
-   const char * filename = "hello";
    envlist_t *envlist;
    struct target_pt_regs regs1, *regs = &regs1;
    
@@ -271,6 +270,7 @@ void ptc_init(void) {
    memset(info, 0, sizeof(struct image_info));
    memset(&bprm, 0, sizeof (bprm));
 //   CPUState *cpu = CPU(x86_env_get_cpu(env));
+   exec_path = filename;
 //////
 
 
@@ -328,7 +328,7 @@ void ptc_init(void) {
     /*
      * Prepare copy of argv vector for target.
      */
-    target_argc = 1;
+    target_argc = 1;//argc-optind, dynamic execute don't need argemuent
     target_argv = calloc(target_argc + 1, sizeof (char *));
     if (target_argv == NULL) {
 	(void) fprintf(stderr, "Unable to allocate memory for target_argv\n");
@@ -338,17 +338,18 @@ void ptc_init(void) {
      * If argv0 is specified (using '-0' switch) we replace
      * argv[0] pointer with the given one.
      */
+    /**** 
+    i = 0;
 
-//    i = 0;
-
-//    if (argv0 != NULL) {
-//        target_argv[i++] = strdup(argv0);
-//    }
-    target_argv[0] ="hello";
+    if (argv0 != NULL) {
+        target_argv[i++] = strdup(argv0);
+    }
+    ****/
+    target_argv[target_argc-1] =strdup(filename);
     target_argv[target_argc] = NULL;
+
     ts = g_malloc0 (sizeof(TaskState));
     init_task_state(ts);
-
     /* build Task State */
     ts->info = info;
     ts->bprm = &bprm;
