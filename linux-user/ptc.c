@@ -765,6 +765,9 @@ unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     if(env->regs[R_EAX]==231){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+      
       return 0;
     }
     
