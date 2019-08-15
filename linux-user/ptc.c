@@ -765,7 +765,7 @@ unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     if(env->regs[R_EAX]==231){
-      return -1;
+      return 0;
     }
     
     env->regs[R_EAX] = do_syscall(env,
