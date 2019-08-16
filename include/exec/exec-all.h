@@ -43,6 +43,27 @@ typedef ram_addr_t tb_page_addr_t;
 struct TranslationBlock;
 typedef struct TranslationBlock TranslationBlock;
 
+/* To record branch CPU state */
+#ifdef CONFIG_LIBTINYCODE
+typedef struct QNode{
+        CPUArchState data;
+        struct QNode *next;
+}QNode,*QueuePtr;
+
+typedef struct{
+        QueuePtr front;
+        QueuePtr rear;
+}ArchCPUStateQueueLine;
+
+void initArchCPUStateQueueLine(void);
+void insertArchCPUStateQueueLine(CPUArchState element);
+int isEmpty(void);
+CPUArchState deletArchCPUStateQueueLine(void);
+
+#endif
+
+
+
 /* XXX: make safe guess about sizes */
 #define MAX_OP_PER_INSTR 266
 

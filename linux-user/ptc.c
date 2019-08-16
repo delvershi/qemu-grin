@@ -64,6 +64,8 @@ unsigned long guest_base = 0;
 unsigned long mmap_min_addr = 4096;
 
 //////////////////////////////////////////////////
+ArchCPUStateQueueLine CPUQueueLine;
+
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
@@ -859,3 +861,46 @@ void ptc_disassemble(FILE *output, uint32_t buffer, size_t buffer_size,
 #endif
   target_disas_max(output, cpu, /* GUEST_BASE + */ buffer, buffer_size, flags, max);
 }
+
+void initArchCPUStateQueueLine(void){
+  CPUQueueLine.front = CPUQueueLine.rear = (QueuePtr)malloc(sizeof(QNode));
+  if(CPUQueueLine.front == NULL){
+    fprintf(stderr,"Initial queue node failed!\n");
+    exit(0);
+  }  
+  CPUQueueLine.front->next = NULL;
+}
+
+void insertArchCPUStateQueueLine(CPUArchState element){
+  QueuePtr q = (QueuePtr)malloc(sizeof(QNode));
+  if(q == NULL){
+    fprintf(stderr,"Alloca queue node failed!\n");
+  }
+  q->data = element;
+  q->next = NULL;
+  // CPUQueueLine.rear represents the last element 
+  CPUQueueLine.rear->next = q;
+  CPUQueueLine.rear = q;
+}
+
+int isEmpty(void){ return CPUQueueLine.front == CPUQueueLine.rear?1:0; }
+
+CPUArchState deletArchCPUStateQueueLine(void){
+  CPUArchState element;
+  QueuePtr q = CPUQueueLine.front->next;
+  if(!isEmpty()){
+     element = q->data;
+     CPUQueueLine.front->next  = q->next;
+     if(CPUQueueLine.rear == q){
+       CPUQueueLine.rear = CPUQueueLine.front;
+     }
+  }
+  else
+    fprintf(stderr,"Branch CPU state line is null!\n");
+  
+  return element;
+}
+
+
+
+
