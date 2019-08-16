@@ -148,6 +148,37 @@ void init_task_state(TaskState *ts)
     }
     ts->sigqueue_table[i].next = NULL;
 }
+
+CPUArchState *cpu_copy(CPUArchState *env)
+{
+    CPUState *cpu = ENV_GET_CPU(env);
+#if defined(TARGET_X86_64)
+    CPUState *new_cpu = cpu_init("qemu64");
+#endif 
+    CPUArchState *new_env = new_cpu->env_ptr;
+    CPUBreakpoint *bp;
+    CPUWatchpoint *wp;
+
+    /* Reset non arch specific state */
+    cpu_reset(new_cpu);
+
+    memcpy(new_env, env, sizeof(CPUArchState));
+
+    /* Clone all break/watchpoints.
+       Note: Once we support ptrace with hw-debug register access, make sure
+       BP_CPU break/watchpoints are handled correctly on clone. */
+    QTAILQ_INIT(&new_cpu->breakpoints);
+    QTAILQ_INIT(&new_cpu->watchpoints);
+    QTAILQ_FOREACH(bp, &cpu->breakpoints, entry) {
+        cpu_breakpoint_insert(new_cpu, bp->pc, bp->flags, NULL);
+    }
+    QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
+        cpu_watchpoint_insert(new_cpu, wp->vaddr, wp->len, wp->flags, NULL);
+    }
+
+    return new_env;
+}
+
 ///////////////////////////////////////////////////////////
 
 //abi_long do_brk(abi_ulong new_brk) { exit(-1); }
@@ -230,6 +261,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.translate = &ptc_translate;
   result.disassemble = &ptc_disassemble;
   result.do_syscall2 = &ptc_do_syscall2;
+  result.storeCPUState = &ptc_storeCPUState;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -419,6 +451,7 @@ void ptc_init(const char *filename) {
 
     g_hash_table_foreach(helper_table, add_helper, &helper_table_size);
   }
+  initArchCPUStateQueueLine();
 }
 
 static TranslationBlock *tb_alloc2(target_ulong pc)
@@ -763,6 +796,13 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // return env->eip;
 }
 
+void ptc_storeCPUState(void) {
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+  CPUArchState *new_env;
+  new_env = cpu_copy(env);
+  insertArchCPUStateQueueLine(*new_env); 
+}
+
 unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
@@ -895,8 +935,10 @@ CPUArchState deletArchCPUStateQueueLine(void){
        CPUQueueLine.rear = CPUQueueLine.front;
      }
   }
-  else
+  else{
     fprintf(stderr,"Branch CPU state line is null!\n");
+    exit(0);
+  }
   
   return element;
 }

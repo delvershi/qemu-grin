@@ -248,6 +248,7 @@ EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t cod
 EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 //EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 EXPORTED(unsigned long, ptc_do_syscall2, (void));
+EXPORTED(void, ptc_storeCPUState, (void));
 
 #undef EXPORTED
 
@@ -261,6 +262,7 @@ typedef struct {
   ptc_disassemble_ptr_t disassemble;
  
   ptc_do_syscall2_ptr_t do_syscall2;
+  ptc_storeCPUState_ptr_t storeCPUState;
 
   PTCOpcodeDef *opcode_defs;
   PTCHelperDef *helper_defs;
