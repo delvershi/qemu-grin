@@ -249,7 +249,7 @@ EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions,u
 //EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 EXPORTED(unsigned long, ptc_do_syscall2, (void));
 EXPORTED(void, ptc_storeCPUState, (void));
-
+EXPORTED(void, ptc_getBranchCPUeip,(void));
 #undef EXPORTED
 
 typedef struct {
@@ -263,6 +263,7 @@ typedef struct {
  
   ptc_do_syscall2_ptr_t do_syscall2;
   ptc_storeCPUState_ptr_t storeCPUState;
+  ptc_getBranchCPUeip_ptr_t getBranchCPUeip;
 
   PTCOpcodeDef *opcode_defs;
   PTCHelperDef *helper_defs;

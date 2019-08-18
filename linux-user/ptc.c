@@ -262,6 +262,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.disassemble = &ptc_disassemble;
   result.do_syscall2 = &ptc_do_syscall2;
   result.storeCPUState = &ptc_storeCPUState;
+  result.getBranchCPUeip = &ptc_getBranchCPUeip;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -803,6 +804,10 @@ void ptc_storeCPUState(void) {
   insertArchCPUStateQueueLine(*new_env); 
 }
 
+void ptc_getBranchCPUeip(void){ 
+  traversArchCPUStateQueueLine();
+}
+
 unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
@@ -943,6 +948,12 @@ CPUArchState deletArchCPUStateQueueLine(void){
   return element;
 }
 
-
+void traversArchCPUStateQueueLine(void) {
+  QueuePtr p = CPUQueueLine.front->next;
+  while(p!=NULL){
+    fprintf(stderr,"CPU State eip: %lx\n",p->data.eip);
+    p = p->next;
+  }
+}
 
 

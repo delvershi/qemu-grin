@@ -59,6 +59,7 @@ void initArchCPUStateQueueLine(void);
 void insertArchCPUStateQueueLine(CPUArchState element);
 int isEmpty(void);
 CPUArchState deletArchCPUStateQueueLine(void);
+void traversArchCPUStateQueueLine(void);
 
 #endif
 
