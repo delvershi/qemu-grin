@@ -263,6 +263,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.do_syscall2 = &ptc_do_syscall2;
   result.storeCPUState = &ptc_storeCPUState;
   result.getBranchCPUeip = &ptc_getBranchCPUeip;
+  result.deletCPULINEState = &ptc_deletCPULINEState;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -795,6 +796,12 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
     return (size_t) tb->size;
    // return env->eip;
+}
+
+void ptc_deletCPULINEState(void){
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+  *env = deletArchCPUStateQueueLine();
+
 }
 
 void ptc_storeCPUState(void) {
