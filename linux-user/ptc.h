@@ -292,6 +292,12 @@ static inline void ptc_instruction_list_free(PTCInstructionList *to_free) {
   }
 }
 
+static inline void ptc_instruction_list_malloc(PTCInstructionList *InstructionListTmp) {
+  InstructionListTmp->arguments = (PTCInstructionArg *)malloc(sizeof(PTCInstructionArg));
+  InstructionListTmp->instructions = (PTCInstruction *)malloc(sizeof(PTCInstruction));
+  InstructionListTmp->temps = (PTCTemp *)malloc(sizeof(PTCTemp));
+}
+
 static inline PTCHelperDef *ptc_find_helper(PTCInterface *ptc, PTCInstructionArg id) {
   unsigned i = 0;
 

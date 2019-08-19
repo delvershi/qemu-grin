@@ -801,13 +801,14 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 void ptc_deletCPULINEState(void){
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   *env = deletArchCPUStateQueueLine();
-
+  fprintf(stderr,"load......... CPU %lx\n",env->eip);
 }
 
 void ptc_storeCPUState(void) {
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   CPUArchState *new_env;
   new_env = cpu_copy(env);
+  fprintf(stderr,"store CPU %lx\n",new_env->eip);
   insertArchCPUStateQueueLine(*new_env); 
 }
 
