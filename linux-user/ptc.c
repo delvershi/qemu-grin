@@ -65,6 +65,8 @@ unsigned long mmap_min_addr = 4096;
 
 //////////////////////////////////////////////////
 ArchCPUStateQueueLine CPUQueueLine;
+abi_ulong elf_start_data;
+abi_ulong elf_end_data;
 
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
@@ -416,6 +418,10 @@ void ptc_init(const char *filename) {
     target_set_brk(info->brk);
     syscall_init();
     signal_init();
+
+   /* Get ELF data segment */
+   elf_start_data = info->start_data;
+   elf_end_data = info->end_data;
 ////////////////////////////////
 
     tcg_prologue_init(&tcg_ctx);
@@ -802,14 +808,22 @@ void ptc_deletCPULINEState(void){
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   *env = deletArchCPUStateQueueLine();
   fprintf(stderr,"load......... CPU %lx\n",env->eip);
+  fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
+
 }
 
 void ptc_storeCPUState(void) {
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   CPUArchState *new_env;
+  fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
   new_env = cpu_copy(env);
   fprintf(stderr,"store CPU %lx\n",new_env->eip);
-  insertArchCPUStateQueueLine(*new_env); 
+  fprintf(stderr,"load......... rax %lx\n",new_env->regs[0]);
+  insertArchCPUStateQueueLine(*new_env);
+  
+  /* Store ELF data segments */
+  //malloc
+  //memcpy(elf_start_data 
 }
 
 void ptc_getBranchCPUeip(void){ 
@@ -947,6 +961,7 @@ CPUArchState deletArchCPUStateQueueLine(void){
      if(CPUQueueLine.rear == q){
        CPUQueueLine.rear = CPUQueueLine.front;
      }
+    free(q); 
   }
   else{
     fprintf(stderr,"Branch CPU state line is null!\n");
