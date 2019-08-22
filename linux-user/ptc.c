@@ -811,7 +811,10 @@ void ptc_deletCPULINEState(void){
   *env = datatmp.cpu_data;
   fprintf(stderr,"load......... CPU %lx\n",env->eip);
   fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
-
+  
+  /* Load ELF data segments */
+  memcpy((void *)elf_start_data,datatmp.elf_data,elf_end_data - elf_start_data);
+  free(datatmp.elf_data);
 }
 
 void ptc_storeCPUState(void) {
@@ -823,14 +826,13 @@ void ptc_storeCPUState(void) {
   fprintf(stderr,"load......... rax %lx\n",new_env->regs[0]);
   
   /* Store ELF data segments */
-  printf("55555---       %d\n",elf_end_data-elf_start_data);  
   void *pdata = (void *)malloc(elf_end_data - elf_start_data);
   if(pdata == NULL){
     fprintf(stderr,"Alloc data memory failed!\n");
     exit(0);
   }
   memcpy(pdata,(void *)elf_start_data,elf_end_data - elf_start_data);
- 
+
   insertArchCPUStateQueueLine(*new_env,pdata); 
 }
 
