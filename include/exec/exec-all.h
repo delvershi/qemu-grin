@@ -45,8 +45,13 @@ typedef struct TranslationBlock TranslationBlock;
 
 /* To record branch CPU state */
 #ifdef CONFIG_LIBTINYCODE
+typedef struct BranchState{
+  CPUArchState cpu_data;
+  void *elf_data;
+}BranchState;
+
 typedef struct QNode{
-        CPUArchState data;
+        struct BranchState data;
         struct QNode *next;
 }QNode,*QueuePtr;
 
@@ -56,9 +61,9 @@ typedef struct{
 }ArchCPUStateQueueLine;
 
 void initArchCPUStateQueueLine(void);
-void insertArchCPUStateQueueLine(CPUArchState element);
+void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data);
 int isEmpty(void);
-CPUArchState deletArchCPUStateQueueLine(void);
+BranchState deletArchCPUStateQueueLine(void);
 void traversArchCPUStateQueueLine(void);
 
 #endif

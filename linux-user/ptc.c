@@ -806,7 +806,9 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
 void ptc_deletCPULINEState(void){
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
-  *env = deletArchCPUStateQueueLine();
+  BranchState datatmp;
+  datatmp = deletArchCPUStateQueueLine();
+  *env = datatmp.cpu_data;
   fprintf(stderr,"load......... CPU %lx\n",env->eip);
   fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
 
@@ -819,11 +821,17 @@ void ptc_storeCPUState(void) {
   new_env = cpu_copy(env);
   fprintf(stderr,"store CPU %lx\n",new_env->eip);
   fprintf(stderr,"load......... rax %lx\n",new_env->regs[0]);
-  insertArchCPUStateQueueLine(*new_env);
   
   /* Store ELF data segments */
-  //malloc
-  //memcpy(elf_start_data 
+  printf("55555---       %d\n",elf_end_data-elf_start_data);  
+  void *pdata = (void *)malloc(elf_end_data - elf_start_data);
+  if(pdata == NULL){
+    fprintf(stderr,"Alloc data memory failed!\n");
+    exit(0);
+  }
+  memcpy(pdata,(void *)elf_start_data,elf_end_data - elf_start_data);
+ 
+  insertArchCPUStateQueueLine(*new_env,pdata); 
 }
 
 void ptc_getBranchCPUeip(void){ 
@@ -938,12 +946,13 @@ void initArchCPUStateQueueLine(void){
   CPUQueueLine.front->next = NULL;
 }
 
-void insertArchCPUStateQueueLine(CPUArchState element){
+void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data){
   QueuePtr q = (QueuePtr)malloc(sizeof(QNode));
   if(q == NULL){
     fprintf(stderr,"Alloca queue node failed!\n");
   }
-  q->data = element;
+  q->data.cpu_data = element;
+  q->data.elf_data = elf_data;
   q->next = NULL;
   // CPUQueueLine.rear represents the last element 
   CPUQueueLine.rear->next = q;
@@ -952,11 +961,12 @@ void insertArchCPUStateQueueLine(CPUArchState element){
 
 int isEmpty(void){ return CPUQueueLine.front == CPUQueueLine.rear?1:0; }
 
-CPUArchState deletArchCPUStateQueueLine(void){
-  CPUArchState element;
+BranchState deletArchCPUStateQueueLine(void){
+  BranchState element;
   QueuePtr q = CPUQueueLine.front->next;
   if(!isEmpty()){
-     element = q->data;
+     element.cpu_data = q->data.cpu_data;
+     element.elf_data = q->data.elf_data;
      CPUQueueLine.front->next  = q->next;
      if(CPUQueueLine.rear == q){
        CPUQueueLine.rear = CPUQueueLine.front;
@@ -974,7 +984,7 @@ CPUArchState deletArchCPUStateQueueLine(void){
 void traversArchCPUStateQueueLine(void) {
   QueuePtr p = CPUQueueLine.front->next;
   while(p!=NULL){
-    fprintf(stderr,"CPU State eip: %lx\n",p->data.eip);
+    fprintf(stderr,"CPU State eip: %lx\n",p->data.cpu_data.eip);
     p = p->next;
   }
 }
