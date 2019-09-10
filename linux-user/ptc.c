@@ -18,13 +18,13 @@
 
 #include "qemu/envlist.h"
 
-
 /* Check coherence of the values of the constants between TCG_* and
    PTC_*. Sadly we have to use this dirty division by zero trick to
    trigger an error from the compiler, in fact, due to using enums and
    not defines, we cannot check the values with a preprocessor
    conditional block. */
 
+  //  exit(1);
 #define EQUALS(x, y) (1 / ((int) (x) == (int) (y)))
 #define MATCH(pref, x) EQUALS(PTC_ ## x, pref ## x)
 #define MATCH2(pref, prefix, a, b) MATCH(pref, prefix ## _ ## a) + MATCH(pref, prefix ## _ ## b)
@@ -289,6 +289,11 @@ static void add_helper(gpointer key, gpointer value, gpointer user_data) {
   ptc_helper_defs[index].flags = helper->flags;
 }
 
+static void sig_handle(int signum){
+  printf("do segment fault %d\n",signum);
+  siglongjmp(cpu->jmp_env,1);
+}
+
 void ptc_init(const char *filename) {
   int i = 0;
 
@@ -422,6 +427,11 @@ void ptc_init(const char *filename) {
    /* Get ELF data segment */
    elf_start_data = info->start_data;
    elf_end_data = info->end_data;
+
+   /* Set signal to do with SIGSEGV */
+   if(signal(SIGSEGV,sig_handle)==SIG_ERR)
+     fprintf(stderr,"signal(SIGSEGV) error\n");
+ 
 ////////////////////////////////
 
     tcg_prologue_init(&tcg_ctx);
@@ -771,13 +781,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
 
 }
 
-static void sig_usr1(int signum){
-  printf("do segment fault %d\n",signum);
-  siglongjmp(cpu->jmp_env,1);
-}
-
-
-
 /* TODO: error management */
 size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t *dymvirtual_address) {
 //unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t * dymvirtual_address) {
@@ -798,9 +801,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
 
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
-    if(signal(SIGSEGV,sig_usr1)==SIG_ERR)
-       fprintf(stderr,"signal(SIGSEGV) error\n");
-   
+  
     if(sigsetjmp(cpu->jmp_env,1)==0){
     
       tc_ptr = tb->tc_ptr;
@@ -834,10 +835,10 @@ void ptc_deletCPULINEState(void){
 void ptc_storeCPUState(void) {
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   CPUArchState *new_env;
-  fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
+  
   new_env = cpu_copy(env);
   fprintf(stderr,"store CPU %lx\n",new_env->eip);
-  fprintf(stderr,"load......... rax %lx\n",new_env->regs[0]);
+  fprintf(stderr,"store rax %lx\n",new_env->regs[0]);
   
   /* Store ELF data segments */
   void *pdata = (void *)malloc(elf_end_data - elf_start_data);

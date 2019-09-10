@@ -68,9 +68,11 @@
  * savemask parameter will always be zero we can safely define these
  * in terms of setjmp/longjmp on Win32.
  */
+#ifndef CONFIG_LIBTINYCODE
 #define sigjmp_buf jmp_buf
 #define sigsetjmp(env, savemask) setjmp(env)
 #define siglongjmp(env, val) longjmp(env, val)
+#endif
 
 /* Missing POSIX functions. Don't use MinGW-w64 macros. */
 #undef gmtime_r
