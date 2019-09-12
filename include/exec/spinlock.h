@@ -21,11 +21,25 @@
  */
 #if defined(CONFIG_USER_ONLY)
 
+#ifdef CONFIG_LIBTINYCODE
+/* The same as system mode emulation */
+typedef int spinlock_t;
+#define SPIN_LOCK_UNLOCKED 0
+
+static inline void spin_lock(spinlock_t *lock)
+{
+}
+
+static inline void spin_unlock(spinlock_t *lock)
+{
+}
+#else
 #include <pthread.h>
 #define spin_lock pthread_mutex_lock
 #define spin_unlock pthread_mutex_unlock
 #define spinlock_t pthread_mutex_t
 #define SPIN_LOCK_UNLOCKED PTHREAD_MUTEX_INITIALIZER
+#endif
 
 #else
 
