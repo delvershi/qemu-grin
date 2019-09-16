@@ -864,6 +864,12 @@ unsigned long ptc_do_syscall2(void){
       
       return 0;
     }
+    if(env->regs[R_EAX]==202){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+   
+      return 0;//TARGET_NR_futex
+    }
     
     env->regs[R_EAX] = do_syscall(env,
 				  env->regs[R_EAX],
