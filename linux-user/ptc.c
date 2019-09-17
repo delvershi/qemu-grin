@@ -810,7 +810,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     else{
     
       printf("eip: %lx\n",env->eip);
-   //  exit(1);
+   // exit(1);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
     }
     *dymvirtual_address = env->eip;
