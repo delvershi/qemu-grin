@@ -299,4 +299,8 @@ void initialize_cpu_state(CPUArchState *env,struct target_pt_regs *regs) {
 #else
 #error unsupported target CPU
 #endif
+    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+    env->df = 1 - (2 * ((env->eflags >> 10) & 1));
+    CC_OP = CC_OP_EFLAGS;
+    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);  
 }

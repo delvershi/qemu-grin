@@ -882,7 +882,13 @@ unsigned long ptc_do_syscall2(void){
 				  0,0);
     env->eip = env->exception_next_eip;
     cpu->exception_index = -1; 
-    
+
+    // Deal with CPUX86State->df, I don't know why do this?   
+    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C); 
+    env->df = 1 - (2 * ((env->eflags >> 10) & 1));
+    CC_OP = CC_OP_EFLAGS;
+    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);   
+ 
     return env->eip; 
 }
 
