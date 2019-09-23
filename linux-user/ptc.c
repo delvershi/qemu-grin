@@ -809,7 +809,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     }
     else{
     
-      printf("eip: %lx\n",env->eip);
+      printf("explore branch:  %lx\n",virtual_address);
    // exit(1);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
     }
