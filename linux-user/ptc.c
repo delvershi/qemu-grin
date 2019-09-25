@@ -810,11 +810,12 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     else{
     
       printf("explore branch:  %lx\n",virtual_address);
+      cpu->exception_index = 11;
    // exit(1);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
     }
-    *dymvirtual_address = env->eip;
 
+    *dymvirtual_address = env->eip;
     return (size_t) tb->size;
    // return env->eip;
 }
