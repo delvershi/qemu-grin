@@ -253,6 +253,15 @@ EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
 #undef EXPORTED
 
+//#define CPU_NB_REGS64 16
+//#define CPU_NB_REGS32 8
+
+//#ifdef TARGET_X86_64
+//#define CPU_NB_REGS CPU_NB_REGS64
+//#else
+//#define CPU_NB_REGS CPU_NB_REGS32
+//#endif
+
 typedef struct {
   ptc_get_condition_name_ptr_t get_condition_name;
   ptc_get_load_store_name_ptr_t get_load_store_name;
@@ -277,6 +286,8 @@ typedef struct {
   uint8_t *initialized_env;
 
   int32_t *exception_syscall;
+  uint64_t (*regs)[16];
+  
 
 } PTCInterface;
 
