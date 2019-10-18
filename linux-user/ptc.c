@@ -241,7 +241,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.pc = offsetof(CPUX86State, eip);
   result.sp = offsetof(CPUX86State, regs[R_ESP]);
   CPUX86State *env = (CPUX86State *)cpu->env_ptr;
-  result.regs = &(env->regs);
+  result.regs = env->regs;
 #elif defined(TARGET_ARM)
   result.pc = offsetof(CPUARMState, regs[15]);
   result.sp = offsetof(CPUARMState, regs[13]);
