@@ -251,6 +251,7 @@ EXPORTED(unsigned long, ptc_do_syscall2, (void));
 EXPORTED(void, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
+EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));
 #undef EXPORTED
 
 typedef struct {
@@ -266,6 +267,7 @@ typedef struct {
   ptc_storeCPUState_ptr_t storeCPUState;
   ptc_getBranchCPUeip_ptr_t getBranchCPUeip;
   ptc_deletCPULINEState_ptr_t deletCPULINEState;
+  ptc_is_image_addr_ptr_t is_image_addr;
 
   PTCOpcodeDef *opcode_defs;
   PTCHelperDef *helper_defs;

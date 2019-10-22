@@ -68,6 +68,8 @@ ArchCPUStateQueueLine CPUQueueLine;
 abi_ulong elf_start_data;
 abi_ulong elf_end_data;
 
+struct image_info info1, *info = &info1;
+
 int have_guest_base = 0;
 unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
@@ -303,7 +305,7 @@ void ptc_init(const char *filename) {
    char **target_environ, **wrk;
    char **target_argv;
    int target_argc;
-   struct image_info info1, *info = &info1;
+   //struct image_info info1, *info = &info1;
    struct linux_binprm bprm;
    TaskState *ts;
    int ret,execfd;
@@ -857,6 +859,11 @@ void ptc_storeCPUState(void) {
 
 void ptc_getBranchCPUeip(void){ 
   traversArchCPUStateQueueLine();
+}
+
+uint32_t ptc_is_image_addr(uint64_t va){
+//  printf("start code:%lx   \n start data:%lx   \n start brk:%lx    \n start mmap:%lx   \n start stack%lx   \n start limit%ld   \n ",info->start_code,info->start_data,info->start_brk,info->start_mmap,info->start_stack,info->stack_limit);
+  return 0;
 }
 
 unsigned long ptc_do_syscall2(void){
