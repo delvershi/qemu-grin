@@ -270,6 +270,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.storeCPUState = &ptc_storeCPUState;
   result.getBranchCPUeip = &ptc_getBranchCPUeip;
   result.deletCPULINEState = &ptc_deletCPULINEState;
+  result.is_image_addr = &ptc_is_image_addr;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -862,7 +863,22 @@ void ptc_getBranchCPUeip(void){
 }
 
 uint32_t ptc_is_image_addr(uint64_t va){
-//  printf("start code:%lx   \n start data:%lx   \n start brk:%lx    \n start mmap:%lx   \n start stack%lx   \n start limit%ld   \n ",info->start_code,info->start_data,info->start_brk,info->start_mmap,info->start_stack,info->stack_limit);
+  //printf("brk:%lx\n mmap:%lx\n ",info->brk,info->mmap);
+  if(va>=info->start_code && va<=info->end_code)
+    return 1;
+
+  if(va>=info->start_data && va<=info->end_data)
+    return 1;
+
+  if(va>=info->brk && va<=info->start_mmap){
+    fprintf(stderr,"Unknow address: %lx brk:%lx mmap\n",va,info->brk,info->mmap);
+    return 1;
+  }
+ 
+  if(va<=info->start_stack && va>=0x4000000000)
+    return 1;
+
+  fprintf(stderr,"Unknow address access: %lx\n",va);
   return 0;
 }
 
