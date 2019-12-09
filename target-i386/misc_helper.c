@@ -618,12 +618,15 @@ void helper_mwait(CPUX86State *env, int next_eip_addend)
 
 void helper_pause(CPUX86State *env, int next_eip_addend)
 {
+#ifndef CONFIG_LIBTINYCODE
     X86CPU *cpu = x86_env_get_cpu(env);
+#endif
 
     cpu_svm_check_intercept_param(env, SVM_EXIT_PAUSE, 0);
     env->eip += next_eip_addend;
-
+#ifndef CONFIG_LIBTINYCODE
     do_pause(cpu);
+#endif
 }
 
 void helper_debug(CPUX86State *env)
