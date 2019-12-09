@@ -48,6 +48,7 @@ typedef struct TranslationBlock TranslationBlock;
 typedef struct BranchState{
   CPUArchState cpu_data;
   void *elf_data;
+  void *elf_stack;
 }BranchState;
 
 typedef struct QNode{
@@ -61,7 +62,7 @@ typedef struct{
 }ArchCPUStateQueueLine;
 
 void initArchCPUStateQueueLine(void);
-void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data);
+void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data,void *elf_stack);
 int isEmpty(void);
 BranchState deletArchCPUStateQueueLine(void);
 void traversArchCPUStateQueueLine(void);

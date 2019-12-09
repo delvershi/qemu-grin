@@ -67,6 +67,7 @@ unsigned long mmap_min_addr = 4096;
 ArchCPUStateQueueLine CPUQueueLine;
 abi_ulong elf_start_data;
 abi_ulong elf_end_data;
+abi_ulong elf_start_stack;
 
 struct image_info info1, *info = &info1;
 
@@ -432,6 +433,8 @@ void ptc_init(const char *filename) {
    /* Get ELF data segment */
    elf_start_data = info->start_data;
    elf_end_data = info->end_data;
+   /* Get Stack segment */
+   elf_start_stack = info->start_stack; 
 
    /* Set signal to do with SIGSEGV */
    if(signal(SIGSEGV,sig_handle)==SIG_ERR)
@@ -837,6 +840,9 @@ void ptc_deletCPULINEState(void){
   /* Load ELF data segments */
   memcpy((void *)elf_start_data,datatmp.elf_data,elf_end_data - elf_start_data);
   free(datatmp.elf_data);
+  /* Load ELF stack segments */
+ // memcpy((void *)env->regs[4],datatmp.elf_stack,elf_start_stack-(abi_ulong)env->regs[4]);
+ // free(datatmp.elf_stack);
 }
 
 void ptc_storeCPUState(void) {
@@ -854,8 +860,16 @@ void ptc_storeCPUState(void) {
     exit(0);
   }
   memcpy(pdata,(void *)elf_start_data,elf_end_data - elf_start_data);
+ 
+  /* Store ELF stack segments */
+  void *pstack = (void *)malloc(elf_start_stack - (abi_ulong)env->regs[4]);
+  if(pstack == NULL){
+    fprintf(stderr,"Alloc stack memory failed!\n");
+    exit(0);
+  }
+  memcpy(pstack,(void *)env->regs[4],elf_start_stack - (abi_ulong)env->regs[4]);
 
-  insertArchCPUStateQueueLine(*new_env,pdata); 
+  insertArchCPUStateQueueLine(*new_env,pdata,pstack); 
 }
 
 void ptc_getBranchCPUeip(void){ 
@@ -871,7 +885,7 @@ uint32_t ptc_is_image_addr(uint64_t va){
     return 1;
 
   if(va>=info->brk && va<=info->start_mmap){
-    fprintf(stderr,"Unknow address: %lx brk:%lx mmap\n",va,info->brk,info->mmap);
+    fprintf(stderr,"Unknow address: %lx brk: %lx mmap: %lx\n",va,info->brk,info->mmap);
     return 1;
   }
  
@@ -1002,13 +1016,14 @@ void initArchCPUStateQueueLine(void){
   CPUQueueLine.front->next = NULL;
 }
 
-void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data){
+void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data,void *elf_stack){
   QueuePtr q = (QueuePtr)malloc(sizeof(QNode));
   if(q == NULL){
     fprintf(stderr,"Alloca queue node failed!\n");
   }
   q->data.cpu_data = element;
   q->data.elf_data = elf_data;
+  q->data.elf_stack = elf_stack;
   q->next = NULL;
   // CPUQueueLine.rear represents the last element 
   CPUQueueLine.rear->next = q;
@@ -1023,6 +1038,7 @@ BranchState deletArchCPUStateQueueLine(void){
   if(!isEmpty()){
      element.cpu_data = q->data.cpu_data;
      element.elf_data = q->data.elf_data;
+     element.elf_stack = q->data.elf_stack;
      CPUQueueLine.front->next  = q->next;
      if(CPUQueueLine.rear == q){
        CPUQueueLine.rear = CPUQueueLine.front;
