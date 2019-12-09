@@ -36,8 +36,13 @@ void helper_raise_interrupt(CPUX86State *env, int intno, int next_eip_addend)
 }
 
 void helper_raise_exception(CPUX86State *env, int exception_index)
-{
+{  
+#ifndef CONFIG_LIBTINYCODE
     raise_exception(env, exception_index);
+#else
+    env->exception_next_eip = env->eip + 0;
+    env->eip = env->exception_next_eip; 
+#endif
 }
 
 /*

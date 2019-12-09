@@ -841,8 +841,8 @@ void ptc_deletCPULINEState(void){
   memcpy((void *)elf_start_data,datatmp.elf_data,elf_end_data - elf_start_data);
   free(datatmp.elf_data);
   /* Load ELF stack segments */
- // memcpy((void *)env->regs[4],datatmp.elf_stack,elf_start_stack-(abi_ulong)env->regs[4]);
- // free(datatmp.elf_stack);
+  memcpy((void *)env->regs[4],datatmp.elf_stack,elf_start_stack-(abi_ulong)env->regs[4]);
+  free(datatmp.elf_stack);
 }
 
 void ptc_storeCPUState(void) {
