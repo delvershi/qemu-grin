@@ -798,6 +798,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     uint8_t *tc_ptr;
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
+    env->eip = virtual_address;
+
     target_ulong temp;
     int flags = 0;
     cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
