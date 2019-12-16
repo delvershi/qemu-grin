@@ -802,7 +802,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     is_indirect = 0;
-    //env->eip = virtual_address;
+    env->eip = virtual_address;
 
     target_ulong temp;
     int flags = 0;
