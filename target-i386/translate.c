@@ -92,7 +92,11 @@ typedef struct DisasContext {
     TCGMemOp dflag;
     target_ulong pc; /* pc = eip + cs_base */
     int is_jmp; /* 1 = means jump (stop translation), 2 means CPU
-                   static state change (stop translation) */
+                   static state change (stop translation) */ 
+#ifdef CONFIG_LIBTINYCODE    
+    int is_indirect; /* 1 = means indirect instruction */
+#endif 
+
     /* current block context */
     target_ulong cs_base; /* base of CS segment */
     int pe;     /* protected mode */
@@ -6386,6 +6390,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         /************************/
         /* control */
     case 0xc2: /* ret im */
+#ifdef CONFIG_LIBTINYCODE
+        s->is_indirect = 1;
+#endif
         val = cpu_ldsw_code(env, s->pc);
         s->pc += 2;
         ot = gen_pop_T0(s);
@@ -6395,6 +6402,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         gen_eob(s);
         break;
     case 0xc3: /* ret */
+#ifdef CONFIG_LIBTINYCODE
+        s->is_indirect = 1;
+#endif
         ot = gen_pop_T0(s);
         gen_pop_update(s, ot);
         /* Note that gen_pop_T0 uses a zero-extending load.  */
@@ -7995,6 +8005,10 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     cpu_ptr1 = tcg_temp_new_ptr();
     cpu_cc_srcT = tcg_temp_local_new();
 
+#ifdef CONFIG_LIBTINYCODE
+    dc->is_indirect  = 0;
+#endif
+
     dc->is_jmp = DISAS_NEXT;
     pc_ptr = pc_start;
     lj = -1;
@@ -8031,6 +8045,12 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 
         pc_ptr = disas_insn(env, dc, pc_ptr);
         num_insns++;
+
+#ifdef CONFIG_LIBTINYCODE
+        if(dc->is_indirect)
+	    tb->isIndirect = 1;      
+#endif
+
         /* stop translation if indicated */
         if (dc->is_jmp)
             break;

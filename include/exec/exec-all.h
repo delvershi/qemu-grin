@@ -203,6 +203,11 @@ struct TranslationBlock {
        jmp_first */
     struct TranslationBlock *jmp_next[2];
     struct TranslationBlock *jmp_first;
+
+#ifdef CONFIG_LIBTINYCODE 
+    uint32_t isIndirect;   
+#endif
+    
 };
 
 #include "exec/spinlock.h"

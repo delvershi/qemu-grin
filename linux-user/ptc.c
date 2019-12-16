@@ -210,6 +210,7 @@ PTCHelperDef *ptc_helper_defs;
 unsigned ptc_helper_defs_size;
 
 int32_t *ptc_exception_syscall;
+uint32_t is_indirect = 0;
 
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
@@ -279,6 +280,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.initialized_env = (uint8_t *) &initialized_state.env;
   
   result.exception_syscall = ptc_exception_syscall;
+  result.isIndirect = &is_indirect;
 
   *output = result;
 
@@ -639,6 +641,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->cs_base = cs_base;
     tb->flags = flags;
     tb->cflags = cflags;
+    tb->isIndirect = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
       if (ranges[i].start <= pc && pc < ranges[i].end)
@@ -798,7 +801,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     uint8_t *tc_ptr;
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
-    env->eip = virtual_address;
+    is_indirect = 0;
+    //env->eip = virtual_address;
 
     target_ulong temp;
     int flags = 0;
@@ -810,6 +814,9 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
 
+    if(tb->isIndirect)
+      is_indirect = 1;
+    
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   
     if(sigsetjmp(cpu->jmp_env,1)==0){
