@@ -211,6 +211,8 @@ unsigned ptc_helper_defs_size;
 
 int32_t *ptc_exception_syscall;
 uint32_t is_indirect = 0;
+uint32_t is_call = 0;
+target_ulong callnext = 0;
 
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
@@ -281,6 +283,8 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   
   result.exception_syscall = ptc_exception_syscall;
   result.isIndirect = &is_indirect;
+  result.isCall = &is_call;
+  result.CallNext = &callnext;
 
   *output = result;
 
@@ -642,6 +646,8 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->flags = flags;
     tb->cflags = cflags;
     tb->isIndirect = 0;
+    tb->isCall = 0;
+    tb->CallNext = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
       if (ranges[i].start <= pc && pc < ranges[i].end)
@@ -802,6 +808,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     is_indirect = 0;
+    is_call = 0;
     env->eip = virtual_address;
 
     target_ulong temp;
@@ -816,6 +823,10 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
     if(tb->isIndirect)
       is_indirect = 1;
+    if(tb->isCall){
+      is_call = 1;
+      callnext = tb->CallNext;
+    }
     
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   

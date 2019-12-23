@@ -206,6 +206,8 @@ struct TranslationBlock {
 
 #ifdef CONFIG_LIBTINYCODE 
     uint32_t isIndirect;   
+    uint32_t isCall;
+    target_ulong CallNext;
 #endif
     
 };

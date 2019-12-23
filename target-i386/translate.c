@@ -95,6 +95,9 @@ typedef struct DisasContext {
                    static state change (stop translation) */ 
 #ifdef CONFIG_LIBTINYCODE    
     int is_indirect; /* 1 = means indirect instruction */
+
+    int is_call; /* 1 = means have direct and indirect call */ 
+    target_ulong callnext;
 #endif 
 
     /* current block context */
@@ -4947,6 +4950,10 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
                 tcg_gen_ext16u_tl(cpu_T[0], cpu_T[0]);
             }
             next_eip = s->pc - s->cs_base;
+#ifdef CONFIG_LIBTINYCODE
+            s->is_call = 1;
+	    s->callnext = next_eip;
+#endif
             tcg_gen_movi_tl(cpu_T[1], next_eip);
             gen_push_v(s, cpu_T[1]);
             gen_op_jmp_v(cpu_T[0]);
@@ -6469,6 +6476,10 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
                 tval = (int16_t)insn_get(env, s, MO_16);
             }
             next_eip = s->pc - s->cs_base;
+#ifdef CONFIG_LIBTINYCODE
+            s->is_call = 1;
+	    s->callnext = next_eip;
+#endif
             tval += next_eip;
             if (dflag == MO_16) {
                 tval &= 0xffff;
@@ -8007,6 +8018,8 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 
 #ifdef CONFIG_LIBTINYCODE
     dc->is_indirect  = 0;
+    dc->is_call = 0;
+    dc->callnext = 0;
 #endif
 
     dc->is_jmp = DISAS_NEXT;
@@ -8048,7 +8061,11 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 
 #ifdef CONFIG_LIBTINYCODE
         if(dc->is_indirect)
-	    tb->isIndirect = 1;      
+	    tb->isIndirect = 1;   
+        if(dc->is_call){
+	    tb->isCall = 1;
+	    tb->CallNext = dc->callnext;
+	}	    
 #endif
 
         /* stop translation if indicated */

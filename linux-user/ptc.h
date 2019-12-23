@@ -280,7 +280,9 @@ typedef struct {
 
   int32_t *exception_syscall;
   uint64_t *regs;
-  uint32_t *isIndirect;  
+  uint32_t *isIndirect; 
+  uint32_t *isCall; 
+  uint64_t *CallNext;
 
 } PTCInterface;
 
