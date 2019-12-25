@@ -275,6 +275,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.getBranchCPUeip = &ptc_getBranchCPUeip;
   result.deletCPULINEState = &ptc_deletCPULINEState;
   result.is_image_addr = &ptc_is_image_addr;
+  result.isValidExecuteAddr = &ptc_isValidExecuteAddr;
 
   result.opcode_defs = ptc_opcode_defs;
   result.helper_defs = ptc_helper_defs;
@@ -906,6 +907,7 @@ uint32_t ptc_is_image_addr(uint64_t va){
 
   if(va>=info->brk && va<=info->start_mmap){
     fprintf(stderr,"Unknow address: %lx brk: %lx mmap: %lx\n",va,info->brk,info->mmap);
+    exit(0);
     return 1;
   }
  
@@ -913,6 +915,13 @@ uint32_t ptc_is_image_addr(uint64_t va){
     return 1;
 
   fprintf(stderr,"Unknow address access: %lx\n",va);
+  return 0;
+}
+
+uint32_t ptc_isValidExecuteAddr(uint64_t va){
+  if(va>=info->start_code && va<=info->end_code)
+    return 1;
+
   return 0;
 }
 

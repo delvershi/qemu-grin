@@ -252,6 +252,7 @@ EXPORTED(void, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
 EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));
+EXPORTED(uint32_t,ptc_isValidExecuteAddr,(uint64_t va));
 #undef EXPORTED
 
 typedef struct {
@@ -268,6 +269,7 @@ typedef struct {
   ptc_getBranchCPUeip_ptr_t getBranchCPUeip;
   ptc_deletCPULINEState_ptr_t deletCPULINEState;
   ptc_is_image_addr_ptr_t is_image_addr;
+  ptc_isValidExecuteAddr_ptr_t isValidExecuteAddr;
 
   PTCOpcodeDef *opcode_defs;
   PTCHelperDef *helper_defs;
