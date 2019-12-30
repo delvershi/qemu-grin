@@ -98,6 +98,8 @@ typedef struct DisasContext {
 
     int is_call; /* 1 = means have direct and indirect call */ 
     target_ulong callnext;
+
+    int is_indirectjmp; /* 1 = means have indirect jmp */
 #endif 
 
     /* current block context */
@@ -4980,6 +4982,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             gen_eob(s);
             break;
         case 4: /* jmp Ev */
+#ifdef CONFIG_LIBTINYCODE
+            s->is_indirectjmp = 1;
+#endif
             if (dflag == MO_16) {
                 tcg_gen_ext16u_tl(cpu_T[0], cpu_T[0]);
             }
@@ -8020,6 +8025,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     dc->is_indirect  = 0;
     dc->is_call = 0;
     dc->callnext = 0;
+    dc->is_indirectjmp = 0;
 #endif
 
     dc->is_jmp = DISAS_NEXT;
@@ -8065,7 +8071,9 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
         if(dc->is_call){
 	    tb->isCall = 1;
 	    tb->CallNext = dc->callnext;
-	}	    
+	}
+        if(dc->is_indirectjmp)
+	    tb->isIndirectJmp = 1;	
 #endif
 
         /* stop translation if indicated */
