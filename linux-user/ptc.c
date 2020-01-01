@@ -927,6 +927,9 @@ uint32_t ptc_is_image_addr(uint64_t va){
 uint32_t ptc_isValidExecuteAddr(uint64_t va){
   if(va>=info->start_code && va<=info->end_code)
     return 1;
+  if(va>=info->start_data && va<=info->end_data)
+    return 1;
+
 
   return 0;
 }
