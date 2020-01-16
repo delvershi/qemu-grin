@@ -446,9 +446,11 @@ void ptc_init(const char *filename) {
    elf_start_stack = info->start_stack; 
 
    /* Set signal to do with SIGSEGV */
-   if(signal(SIGSEGV|SIGBUS,sig_handle)==SIG_ERR)
-     fprintf(stderr,"signal(SIGSEGV|SIGBUS) error\n");
- 
+   if(signal(SIGSEGV,sig_handle)==SIG_ERR)
+     printf("signal(SIGSEGV|SIGBUS) error\n");
+    
+   if(signal(SIGBUS,sig_handle)==SIG_ERR)
+     printf("signal(SIGBUS) error\n");
 ////////////////////////////////
 
     tcg_prologue_init(&tcg_ctx);
@@ -892,6 +894,7 @@ void ptc_storeCPUState(void) {
   void *pstack = (void *)malloc(elf_start_stack - (abi_ulong)env->regs[4]);
   if(pstack == NULL){
     fprintf(stderr,"Alloc stack memory failed!\n");
+    fprintf(stderr,"rsp: %lx   elfstack: %lx\n",env->regs[4],elf_start_stack);
     exit(0);
   }
   memcpy(pstack,(void *)env->regs[4],elf_start_stack - (abi_ulong)env->regs[4]);
