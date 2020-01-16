@@ -446,8 +446,8 @@ void ptc_init(const char *filename) {
    elf_start_stack = info->start_stack; 
 
    /* Set signal to do with SIGSEGV */
-   if(signal(SIGSEGV,sig_handle)==SIG_ERR)
-     fprintf(stderr,"signal(SIGSEGV) error\n");
+   if(signal(SIGSEGV|SIGBUS,sig_handle)==SIG_ERR)
+     fprintf(stderr,"signal(SIGSEGV|SIGBUS) error\n");
  
 ////////////////////////////////
 
