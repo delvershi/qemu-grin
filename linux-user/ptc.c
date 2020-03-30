@@ -940,14 +940,14 @@ unsigned long ptc_do_syscall2(void){
     if(env->regs[R_EAX]==231){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      
+      fprintf(stderr,"exit syscall\n"); 
       return 0;
     }
     if(env->regs[R_EAX]==202){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-   
-      return 0;//TARGET_NR_futex
+      fprintf(stderr,"NR futex syscall\n");
+      return env->eip;//TARGET_NR_futex
     }
     
     env->regs[R_EAX] = do_syscall(env,
