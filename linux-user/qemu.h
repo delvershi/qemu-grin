@@ -462,6 +462,7 @@ static inline void *lock_user_string(abi_ulong guest_addr)
 
 #ifdef CONFIG_LIBTINYCODE
 void initialize_cpu_state(CPUArchState *env,struct target_pt_regs *regs);
+extern abi_ulong brk_page;
 #endif
 
 #endif /* QEMU_H */

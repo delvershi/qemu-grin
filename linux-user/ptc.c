@@ -911,14 +911,9 @@ uint32_t ptc_is_image_addr(uint64_t va){
   //if(va>=info->start_code && va<=info->end_code)
   //  return 1;
 
-  if(va>=info->start_data && va<=info->end_data)
+  //if(va>=info->start_data && va<=info->end_data)
+  if(va>=info->start_data && va<brk_page)
     return 1;
-
-//  if(va>=info->brk && va<=info->start_mmap){
-//    fprintf(stderr,"Unknow address: %lx brk: %lx mmap: %lx\n",va,info->brk,info->mmap);
-//    exit(0);
-//    return 1;
-//  }
  
   if(va<=info->start_stack && va>=0x4000000000)
     return 1;
