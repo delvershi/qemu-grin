@@ -4956,6 +4956,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
             s->is_call = 1;
 	    s->callnext = next_eip;
 #endif
+#ifdef CONFIG_LIBTINYCODE
+            s->is_indirect = 1;
+#endif
             tcg_gen_movi_tl(cpu_T[1], next_eip);
             gen_push_v(s, cpu_T[1]);
             gen_op_jmp_v(cpu_T[0]);
@@ -6402,9 +6405,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         /************************/
         /* control */
     case 0xc2: /* ret im */
-#ifdef CONFIG_LIBTINYCODE
-        s->is_indirect = 1;
-#endif
+//#ifdef CONFIG_LIBTINYCODE
+//        s->is_indirect = 1;
+//#endif
         val = cpu_ldsw_code(env, s->pc);
         s->pc += 2;
         ot = gen_pop_T0(s);
@@ -6414,9 +6417,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         gen_eob(s);
         break;
     case 0xc3: /* ret */
-#ifdef CONFIG_LIBTINYCODE
-        s->is_indirect = 1;
-#endif
+//#ifdef CONFIG_LIBTINYCODE
+//        s->is_indirect = 1;
+//#endif
         ot = gen_pop_T0(s);
         gen_pop_update(s, ot);
         /* Note that gen_pop_T0 uses a zero-extending load.  */
