@@ -911,9 +911,18 @@ uint32_t ptc_is_image_addr(uint64_t va){
   //if(va>=info->start_code && va<=info->end_code)
   //  return 1;
 
-  //if(va>=info->start_data && va<=info->end_data)
-  if(va>=info->start_data && va<brk_page)
+  if(va>=info->start_data && va<=info->end_data)
     return 1;
+  if(va>=info->end_data && va<brk_page){
+    brk_page = target_mmap((abi_ulong) brk_page,
+                           (abi_ulong) qemu_host_page_size,
+                           PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
+                           -1,
+                           0);
+    fprintf(stderr,"heap malloc %lx\n",brk_page);
+    return 1;
+  }
  
   if(va<=info->start_stack && va>=0x4000000000)
     return 1;
