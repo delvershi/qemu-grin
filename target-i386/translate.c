@@ -100,6 +100,7 @@ typedef struct DisasContext {
     target_ulong callnext;
 
     int is_indirectjmp; /* 1 = means have indirect jmp */
+    int is_ret; /* 1 = means have ret */
 #endif 
 
     /* current block context */
@@ -6405,9 +6406,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         /************************/
         /* control */
     case 0xc2: /* ret im */
-//#ifdef CONFIG_LIBTINYCODE
-//        s->is_indirect = 1;
-//#endif
+#ifdef CONFIG_LIBTINYCODE
+        s->is_ret = 1;
+#endif
         val = cpu_ldsw_code(env, s->pc);
         s->pc += 2;
         ot = gen_pop_T0(s);
@@ -6417,9 +6418,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         gen_eob(s);
         break;
     case 0xc3: /* ret */
-//#ifdef CONFIG_LIBTINYCODE
-//        s->is_indirect = 1;
-//#endif
+#ifdef CONFIG_LIBTINYCODE
+        s->is_ret = 1;
+#endif
         ot = gen_pop_T0(s);
         gen_pop_update(s, ot);
         /* Note that gen_pop_T0 uses a zero-extending load.  */
@@ -8029,6 +8030,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     dc->is_call = 0;
     dc->callnext = 0;
     dc->is_indirectjmp = 0;
+    dc->is_ret = 0;
 #endif
 
     dc->is_jmp = DISAS_NEXT;
@@ -8076,7 +8078,9 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	    tb->CallNext = dc->callnext;
 	}
         if(dc->is_indirectjmp)
-	    tb->isIndirectJmp = 1;	
+	    tb->isIndirectJmp = 1;
+        if(dc->is_ret)
+	    tb->isRet = 1;	
 #endif
 
         /* stop translation if indicated */

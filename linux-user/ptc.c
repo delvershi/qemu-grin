@@ -214,6 +214,7 @@ uint32_t is_indirect = 0;
 uint32_t is_call = 0;
 target_ulong callnext = 0;
 uint32_t is_indirectjmp = 0;
+uint32_t is_ret = 0;
 
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
@@ -288,6 +289,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.isCall = &is_call;
   result.CallNext = &callnext;
   result.isIndirectJmp = &is_indirectjmp;
+  result.isRet = &is_ret;
 
   *output = result;
 
@@ -817,6 +819,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     is_call = 0;
     env->eip = virtual_address;
     is_indirectjmp = 0;
+    is_ret = 0;
 
     target_ulong temp;
     int flags = 0;
@@ -836,6 +839,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     }
     if(tb->isIndirectJmp)
       is_indirectjmp = 1;
+    if(tb->isRet)
+      is_ret = 1;
     
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   
@@ -955,6 +960,27 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"NR futex syscall\n");
       return env->eip;//TARGET_NR_futex
     }
+    if(env->regs[R_EAX]==3){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+      fprintf(stderr,"closed errno syscall\n");
+      return env->eip;
+    }
+    if(env->regs[R_EAX]==13 ||
+       env->regs[R_EAX]==14 ||
+       env->regs[R_EAX]==15){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1; 
+      fprintf(stderr,"shield sig syscall\n");
+      return env->eip; 
+    }
+    if(env->regs[R_EAX]==200){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+      fprintf(stderr,"tkill syscall\n");
+      return env->eip;
+    }
+
     
     env->regs[R_EAX] = do_syscall(env,
 				  env->regs[R_EAX],
