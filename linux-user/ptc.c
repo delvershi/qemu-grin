@@ -656,6 +656,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->isCall = 0;
     tb->CallNext = 0;
     tb->isIndirectJmp = 0;
+    tb->isRet = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
       if (ranges[i].start <= pc && pc < ranges[i].end)
