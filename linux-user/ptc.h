@@ -248,7 +248,7 @@ EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t cod
 EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 //EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 EXPORTED(unsigned long, ptc_do_syscall2, (void));
-EXPORTED(void, ptc_storeCPUState, (void));
+EXPORTED(uint32_t, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
 EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));

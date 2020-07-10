@@ -882,7 +882,7 @@ void ptc_deletCPULINEState(void){
   free(datatmp.elf_stack);
 }
 
-void ptc_storeCPUState(void) {
+uint32_t ptc_storeCPUState(void) {
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   CPUArchState *new_env;
   
@@ -903,11 +903,13 @@ void ptc_storeCPUState(void) {
   if(pstack == NULL){
     fprintf(stderr,"Alloc stack memory failed!\n");
     fprintf(stderr,"rsp: %lx   elfstack: %lx\n",env->regs[4],elf_start_stack);
-    exit(0);
+   
+    return 0;
   }
   memcpy(pstack,(void *)env->regs[4],elf_start_stack - (abi_ulong)env->regs[4]);
 
   insertArchCPUStateQueueLine(*new_env,pdata,pstack); 
+  return 1;
 }
 
 void ptc_getBranchCPUeip(void){ 
