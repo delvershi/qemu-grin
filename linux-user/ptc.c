@@ -290,6 +290,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
   result.CallNext = &callnext;
   result.isIndirectJmp = &is_indirectjmp;
   result.isRet = &is_ret;
+  result.ElfStartStack = &elf_start_stack;
 
   *output = result;
 

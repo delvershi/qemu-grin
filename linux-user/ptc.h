@@ -287,6 +287,7 @@ typedef struct {
   uint64_t *CallNext;
   uint32_t *isIndirectJmp;
   uint32_t *isRet;
+  abi_ulong *ElfStartStack;
 
 } PTCInterface;
 
