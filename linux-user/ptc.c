@@ -239,7 +239,8 @@ static AddressRange ranges[MAX_RANGES];
 
 static CPU_STRUCT initialized_state;
 
-int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename) {
+int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename, 
+		const char *exe_args) {
 
   PTCInterface result = { 0 };
 

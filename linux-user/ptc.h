@@ -291,7 +291,8 @@ typedef struct {
 
 } PTCInterface;
 
-BOTH(int, ptc_load, (void *handle, PTCInterface *output, const char* ptc_filename));
+BOTH(int, ptc_load, (void *handle, PTCInterface *output, const char* ptc_filename, 
+			const char* exe_args));
 
 /* Helper inline functions */
 
