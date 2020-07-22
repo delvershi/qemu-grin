@@ -240,11 +240,11 @@ static AddressRange ranges[MAX_RANGES];
 static CPU_STRUCT initialized_state;
 
 int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename, 
-		const char *exe_args) {
+		const char *exe_args){
 
   PTCInterface result = { 0 };
 
-  ptc_init(ptc_filename);
+  ptc_init(ptc_filename, exe_args);
 
 #if defined(TARGET_X86_64) || defined(TARGET_I386)
   result.pc = offsetof(CPUX86State, eip);
@@ -313,7 +313,7 @@ static void sig_handle(int signum){
   siglongjmp(cpu->jmp_env,1);
 }
 
-void ptc_init(const char *filename) {
+void ptc_init(const char *filename, const char *exe_args){
   int i = 0;
 
 //////
@@ -326,6 +326,13 @@ void ptc_init(const char *filename) {
    int ret,execfd;
    envlist_t *envlist;
    struct target_pt_regs regs1, *regs = &regs1;
+
+   char *exeArgs = calloc(1, sizeof(char *));  
+   if (exeArgs == NULL) {
+       (void) fprintf(stderr, "Unable to allocate memory for target_argv\n");
+       exit(1);
+   }
+   strcpy(exeArgs, exe_args);
    
    memset(regs,0,sizeof(struct target_pt_regs));
    /* Zero out image_info */
@@ -390,12 +397,28 @@ void ptc_init(const char *filename) {
     /*
      * Prepare copy of argv vector for target.
      */
-    target_argc = 1;//argc-optind, dynamic execute don't need argemuent
-    target_argv = calloc(target_argc + 1, sizeof (char *));
+	    
+    target_argc = 1;
+    target_argv = calloc(target_argc, sizeof (char *));
     if (target_argv == NULL) {
 	(void) fprintf(stderr, "Unable to allocate memory for target_argv\n");
 	exit(1);
     }
+    target_argv[target_argc-1] =strdup(filename);
+
+    char *token = NULL;
+    int j = 1;
+    token = strtok(exeArgs, " ");
+    for(j=1; token != NULL; j++){
+	target_argv = realloc(target_argv, (j+2)*sizeof(char *));
+	if (target_argv == NULL){
+	    (void) fprintf(stderr, "Unable to allocate memory for target_argv\n"); 
+	    exit(1);
+	}
+	target_argv[j] =strdup(token);
+	token = strtok(NULL, " ");
+    }
+    target_argc = j;
     /*
      * If argv0 is specified (using '-0' switch) we replace
      * argv[0] pointer with the given one.
@@ -407,7 +430,7 @@ void ptc_init(const char *filename) {
         target_argv[i++] = strdup(argv0);
     }
     ****/
-    target_argv[target_argc-1] =strdup(filename);
+
     target_argv[target_argc] = NULL;
 
     ts = g_malloc0 (sizeof(TaskState));
