@@ -1010,7 +1010,12 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"tkill syscall\n");
       return env->eip;
     }
-
+    if(env->regs[R_EAX]==269){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+      fprintf(stderr,"faccess: check user's permissions for a file\n");
+      return env->eip;
+    }
     
     env->regs[R_EAX] = do_syscall(env,
 				  env->regs[R_EAX],
