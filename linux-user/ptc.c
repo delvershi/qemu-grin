@@ -978,7 +978,8 @@ uint32_t ptc_isValidExecuteAddr(uint64_t va){
 unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
-    if(env->regs[R_EAX]==231){
+    if(env->regs[R_EAX]==231 ||
+       env->regs[R_EAX]==60){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
       fprintf(stderr,"exit syscall\n");
