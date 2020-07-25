@@ -281,6 +281,7 @@ typedef struct {
   uint8_t *initialized_env;
 
   int32_t *exception_syscall;
+  uint64_t *syscall_next_eip;
   uint64_t *regs;
   uint32_t *isIndirect; 
   uint32_t *isCall; 

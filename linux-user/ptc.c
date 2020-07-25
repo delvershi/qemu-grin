@@ -210,6 +210,7 @@ PTCHelperDef *ptc_helper_defs;
 unsigned ptc_helper_defs_size;
 
 int32_t *ptc_exception_syscall;
+target_ulong ptc_syscall_next_eip = 0;
 uint32_t is_indirect = 0;
 uint32_t is_call = 0;
 target_ulong callnext = 0;
@@ -286,6 +287,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.initialized_env = (uint8_t *) &initialized_state.env;
   
   result.exception_syscall = ptc_exception_syscall;
+  result.syscall_next_eip = &ptc_syscall_next_eip;
   result.isIndirect = &is_indirect;
   result.isCall = &is_call;
   result.CallNext = &callnext;
@@ -884,6 +886,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // exit(1);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
     }
+    ptc_syscall_next_eip = env->exception_next_eip;
 
     *dymvirtual_address = env->eip;
     return (size_t) tb->size;
