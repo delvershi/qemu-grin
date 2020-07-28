@@ -765,6 +765,10 @@ void ptc_mmap(uint64_t virtual_address, const void *code, size_t code_size) {
                               -1,
                               0);
   memcpy((void *) g2h(virtual_address), code, code_size);
+  if(mprotect((void *) virtual_address,
+	      (abi_ulong) code_size,
+	      PROT_READ | PROT_EXEC) == -1)
+    exit(-1);
 
   assert(mmapd_address == (abi_ulong) virtual_address);
 
