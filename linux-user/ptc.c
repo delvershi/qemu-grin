@@ -215,6 +215,7 @@ uint32_t is_indirect = 0;
 uint32_t is_call = 0;
 target_ulong callnext = 0;
 uint32_t is_indirectjmp = 0;
+uint32_t is_directjmp = 0;
 uint32_t is_ret = 0;
 
 static unsigned long cs_base = 0;
@@ -292,6 +293,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.isCall = &is_call;
   result.CallNext = &callnext;
   result.isIndirectJmp = &is_indirectjmp;
+  result.isDirectJmp = &is_directjmp;
   result.isRet = &is_ret;
   result.ElfStartStack = &elf_start_stack;
 
@@ -683,6 +685,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->isCall = 0;
     tb->CallNext = 0;
     tb->isIndirectJmp = 0;
+    tb->isDirectJmp = 0;
     tb->isRet = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
@@ -847,6 +850,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     is_call = 0;
     env->eip = virtual_address;
     is_indirectjmp = 0;
+    is_directjmp = 0;
     is_ret = 0;
 
     target_ulong temp;
@@ -867,6 +871,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     }
     if(tb->isIndirectJmp)
       is_indirectjmp = 1;
+    if(tb->isDirectJmp)
+      is_directjmp = 1;
     if(tb->isRet)
       is_ret = 1;
     

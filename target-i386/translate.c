@@ -100,6 +100,7 @@ typedef struct DisasContext {
     target_ulong callnext;
 
     int is_indirectjmp; /* 1 = means have indirect jmp */
+    int is_directjmp; /* 1 = means have direct jmp */
     int is_ret; /* 1 = means have ret */
 #endif 
 
@@ -6515,6 +6516,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         }
         goto do_lcall;
     case 0xe9: /* jmp im */
+#ifdef CONFIG_LIBTINYCODE
+        s->is_directjmp = 1;
+#endif
         if (dflag != MO_16) {
             tval = (int32_t)insn_get(env, s, MO_32);
         } else {
@@ -6543,6 +6547,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
         }
         goto do_ljmp;
     case 0xeb: /* jmp Jb */
+#ifdef CONFIG_LIBTINYCODE
+        s->is_directjmp = 1;
+#endif
         tval = (int8_t)insn_get(env, s, MO_8);
         tval += s->pc - s->cs_base;
         if (dflag == MO_16) {
@@ -8030,6 +8037,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     dc->is_call = 0;
     dc->callnext = 0;
     dc->is_indirectjmp = 0;
+    dc->is_directjmp = 0;
     dc->is_ret = 0;
 #endif
 
@@ -8079,6 +8087,8 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	}
         if(dc->is_indirectjmp)
 	    tb->isIndirectJmp = 1;
+	if(dc->is_directjmp)
+            tb->isDirectJmp = 1;
         if(dc->is_ret)
 	    tb->isRet = 1;	
 #endif
