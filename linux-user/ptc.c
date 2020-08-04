@@ -998,6 +998,12 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"exit syscall\n");
       return 0;
     }
+    if(env->regs[R_EAX]==62){
+      env->eip = env->exception_next_eip;
+      cpu->exception_index = -1;
+      fprintf(stderr,"Mask kill syscall\n");
+      return env->eip;//TARGET_NR_futex
+    }
     if(env->regs[R_EAX]==202){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
