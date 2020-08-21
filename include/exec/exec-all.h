@@ -209,7 +209,7 @@ struct TranslationBlock {
     uint32_t isCall;
     target_ulong CallNext;
     uint32_t isIndirectJmp;
-    uint32_t isDirectJmp;
+    target_ulong isDirectJmp;
     target_ulong isRet;
 #endif
     

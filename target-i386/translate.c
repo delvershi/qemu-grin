@@ -8088,7 +8088,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
         if(dc->is_indirectjmp)
 	    tb->isIndirectJmp = 1;
 	if(dc->is_directjmp)
-            tb->isDirectJmp = 1;
+            tb->isDirectJmp = pc_ptr;
         if(dc->is_ret)
 	    tb->isRet = pc_ptr;	
 #endif

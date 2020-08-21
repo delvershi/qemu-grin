@@ -287,7 +287,7 @@ typedef struct {
   uint32_t *isCall; 
   uint64_t *CallNext;
   uint32_t *isIndirectJmp;
-  uint32_t *isDirectJmp;
+  uint64_t *isDirectJmp;
   uint64_t *isRet;
   uint64_t *ElfStartStack;
 

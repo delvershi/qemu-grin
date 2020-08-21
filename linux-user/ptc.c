@@ -215,7 +215,7 @@ uint32_t is_indirect = 0;
 uint32_t is_call = 0;
 target_ulong callnext = 0;
 uint32_t is_indirectjmp = 0;
-uint32_t is_directjmp = 0;
+uint64_t is_directjmp = 0;
 uint64_t is_ret = 0;
 
 static unsigned long cs_base = 0;
@@ -876,7 +876,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     if(tb->isIndirectJmp)
       is_indirectjmp = 1;
     if(tb->isDirectJmp)
-      is_directjmp = 1;
+      is_directjmp = tb->isDirectJmp;
     if(tb->isRet)
       is_ret = tb->isRet;
     
