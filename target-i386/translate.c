@@ -8090,7 +8090,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	if(dc->is_directjmp)
             tb->isDirectJmp = 1;
         if(dc->is_ret)
-	    tb->isRet = 1;	
+	    tb->isRet = pc_ptr;	
 #endif
 
         /* stop translation if indicated */
