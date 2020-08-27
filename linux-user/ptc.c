@@ -1018,10 +1018,11 @@ unsigned long ptc_do_syscall2(void){
     }
     if(env->regs[R_EAX]==13 ||
        env->regs[R_EAX]==14 ||
-       env->regs[R_EAX]==15){
+       env->regs[R_EAX]==15 ||
+       env->regs[R_EAX]==11){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1; 
-      fprintf(stderr,"shield sig syscall\n");
+      fprintf(stderr,"mask syscall\n");
       return env->eip; 
     }
     if(env->regs[R_EAX]==200){
