@@ -221,6 +221,9 @@ uint64_t is_ret = 0;
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
 
+uint64_t CodeStartAddress = 0;
+size_t CodeSize = 0;
+
 #if defined(TARGET_X86_64) || defined(TARGET_I386)
 # define CPU_STRUCT X86CPU
 #elif defined(TARGET_ARM)
@@ -772,6 +775,9 @@ void ptc_mmap(uint64_t virtual_address, const void *code, size_t code_size) {
 
   assert(mmapd_address == (abi_ulong) virtual_address);
 
+  CodeStartAddress = virtual_address;
+  CodeSize = code_size;
+
   for (i = 0; i < MAX_RANGES; i++) {
     if (ranges[i].start == ranges[i].end
         && ranges[i].end == 0) {
@@ -782,6 +788,20 @@ void ptc_mmap(uint64_t virtual_address, const void *code, size_t code_size) {
   }
 
   assert(false);
+}
+
+void ptc_lockexec(void){
+    if(mprotect((void *) CodeStartAddress,
+		(abi_ulong) CodeSize,
+	        PROT_NONE) == -1)
+        exit(errno);
+}
+
+void ptc_unlockexec(void){
+    if(mprotect((void *) CodeStartAddress,
+   	        (abi_ulong) CodeSize,
+	        PROT_READ | PROT_EXEC) == -1)
+        exit(errno);
 }
 
 /* Execute a TB, and fix up the CPU state afterwards if necessary */

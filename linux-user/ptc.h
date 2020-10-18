@@ -253,6 +253,8 @@ EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
 EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));
 EXPORTED(uint32_t,ptc_isValidExecuteAddr,(uint64_t va));
+EXPORTED(void,ptc_lockexec,(void));
+EXPORTED(void,ptc_unlockexec,(void));
 #undef EXPORTED
 
 typedef struct {
