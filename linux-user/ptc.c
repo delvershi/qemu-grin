@@ -69,6 +69,8 @@ abi_ulong elf_start_data;
 abi_ulong elf_end_data;
 abi_ulong elf_start_stack;
 
+struct sigaction act, oact;
+
 struct image_info info1, *info = &info1;
 
 int have_guest_base = 0;
@@ -315,8 +317,9 @@ static void add_helper(gpointer key, gpointer value, gpointer user_data) {
   ptc_helper_defs[index].flags = helper->flags;
 }
 
-static void sig_handle(int signum){
+static void sig_handle(int signum, siginfo_t* siginfo, void* context){
   printf("do segment fault %d\n",signum);
+  printf("Illegal access memory:  %p\n",siginfo->si_addr);
   siglongjmp(cpu->jmp_env,1);
 }
 
@@ -480,11 +483,15 @@ void ptc_init(const char *filename, const char *exe_args){
    elf_start_stack = info->start_stack; 
 
    /* Set signal to do with SIGSEGV */
-   if(signal(SIGSEGV,sig_handle)==SIG_ERR)
-     printf("signal(SIGSEGV|SIGBUS) error\n");
+   act.sa_sigaction = sig_handle;
+   sigemptyset(&act.sa_mask);
+   act.sa_flags = SA_SIGINFO|SA_ONSTACK;
+  
+   if(sigaction(SIGSEGV, &act, &oact)<0)
+     exit(-1);
     
-   if(signal(SIGBUS,sig_handle)==SIG_ERR)
-     printf("signal(SIGBUS) error\n");
+   if(sigaction(SIGBUS, &act, &oact)<0)
+     exit(-1);
 ////////////////////////////////
 
     tcg_prologue_init(&tcg_ctx);
@@ -762,18 +769,19 @@ void ptc_mmap(uint64_t virtual_address, const void *code, size_t code_size) {
   unsigned i;
 
   mmapd_address = target_mmap((abi_ulong) virtual_address,
-                              (abi_ulong) code_size,
+                              (abi_ulong) code_size ,
                               PROT_READ | PROT_WRITE | PROT_EXEC,
                               MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
                               -1,
                               0);
   memcpy((void *) g2h(virtual_address), code, code_size);
+
+  assert(mmapd_address == (abi_ulong) virtual_address);
+
   if(mprotect((void *) virtual_address,
 	      (abi_ulong) code_size,
 	      PROT_READ | PROT_EXEC) == -1)
     exit(-1);
-
-  assert(mmapd_address == (abi_ulong) virtual_address);
 
   CodeStartAddress = virtual_address;
   CodeSize = code_size;
@@ -903,12 +911,13 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   
     if(sigsetjmp(cpu->jmp_env,1)==0){
-    
+      //ptc_lockexec(); 
       tc_ptr = tb->tc_ptr;
       cpu_tb_exec(cpu, tc_ptr);
+      //ptc_unlockexec();
     }
     else{
-    
+      //ptc_unlockexec(); 
       printf("explore branch:  %lx\n",virtual_address);
       cpu->exception_index = 11;
       *dymvirtual_address = virtual_address;
