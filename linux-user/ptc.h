@@ -292,6 +292,7 @@ typedef struct {
   uint64_t *isDirectJmp;
   uint64_t *isRet;
   uint64_t *ElfStartStack;
+  uint64_t *illegalAccessAddr;
 
 } PTCInterface;
 

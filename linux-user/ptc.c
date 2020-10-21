@@ -70,6 +70,7 @@ abi_ulong elf_end_data;
 abi_ulong elf_start_stack;
 
 struct sigaction act, oact;
+uint64_t illegal_AccessAddr = 0;
 
 struct image_info info1, *info = &info1;
 
@@ -301,6 +302,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.isDirectJmp = &is_directjmp;
   result.isRet = &is_ret;
   result.ElfStartStack = &elf_start_stack;
+  result.illegalAccessAddr = &illegal_AccessAddr;
 
   *output = result;
 
@@ -320,6 +322,7 @@ static void add_helper(gpointer key, gpointer value, gpointer user_data) {
 static void sig_handle(int signum, siginfo_t* siginfo, void* context){
   printf("do segment fault %d\n",signum);
   printf("Illegal access memory:  %p\n",siginfo->si_addr);
+  illegal_AccessAddr = (uint64_t)siginfo->si_addr;
   siglongjmp(cpu->jmp_env,1);
 }
 
@@ -885,6 +888,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     is_directjmp = 0;
     is_ret = 0;
 
+    illegal_AccessAddr = 0;
+
     target_ulong temp;
     int flags = 0;
     cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
@@ -911,13 +916,13 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   
     if(sigsetjmp(cpu->jmp_env,1)==0){
-      //ptc_lockexec(); 
+      ptc_lockexec(); 
       tc_ptr = tb->tc_ptr;
       cpu_tb_exec(cpu, tc_ptr);
-      //ptc_unlockexec();
+      ptc_unlockexec();
     }
     else{
-      //ptc_unlockexec(); 
+      ptc_unlockexec(); 
       printf("explore branch:  %lx\n",virtual_address);
       cpu->exception_index = 11;
       *dymvirtual_address = virtual_address;
