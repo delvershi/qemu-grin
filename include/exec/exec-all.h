@@ -205,10 +205,10 @@ struct TranslationBlock {
     struct TranslationBlock *jmp_first;
 
 #ifdef CONFIG_LIBTINYCODE 
-    uint32_t isIndirect;   
-    uint32_t isCall;
+    target_ulong isIndirect;   
+    target_ulong isCall;
     target_ulong CallNext;
-    uint32_t isIndirectJmp;
+    target_ulong isIndirectJmp;
     target_ulong isDirectJmp;
     target_ulong isRet;
 #endif

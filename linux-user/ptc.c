@@ -214,10 +214,10 @@ unsigned ptc_helper_defs_size;
 
 int32_t *ptc_exception_syscall;
 target_ulong ptc_syscall_next_eip = 0;
-uint32_t is_indirect = 0;
-uint32_t is_call = 0;
+uint64_t is_indirect = 0;
+uint64_t is_call = 0;
 target_ulong callnext = 0;
-uint32_t is_indirectjmp = 0;
+uint64_t is_indirectjmp = 0;
 uint64_t is_directjmp = 0;
 uint64_t is_ret = 0;
 
@@ -901,13 +901,13 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
 
     if(tb->isIndirect)
-      is_indirect = 1;
+      is_indirect = tb->isIndirect;
     if(tb->isCall){
-      is_call = 1;
+      is_call = tb->isCall;
       callnext = tb->CallNext;
     }
     if(tb->isIndirectJmp)
-      is_indirectjmp = 1;
+      is_indirectjmp = tb->isIndirectJmp;
     if(tb->isDirectJmp)
       is_directjmp = tb->isDirectJmp;
     if(tb->isRet)

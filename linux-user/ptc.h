@@ -285,10 +285,10 @@ typedef struct {
   int32_t *exception_syscall;
   uint64_t *syscall_next_eip;
   uint64_t *regs;
-  uint32_t *isIndirect; 
-  uint32_t *isCall; 
+  uint64_t *isIndirect; 
+  uint64_t *isCall; 
   uint64_t *CallNext;
-  uint32_t *isIndirectJmp;
+  uint64_t *isIndirectJmp;
   uint64_t *isDirectJmp;
   uint64_t *isRet;
   uint64_t *ElfStartStack;

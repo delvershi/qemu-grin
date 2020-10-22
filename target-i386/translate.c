@@ -8080,13 +8080,13 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 
 #ifdef CONFIG_LIBTINYCODE
         if(dc->is_indirect)
-	    tb->isIndirect = 1;   
+	    tb->isIndirect = pc_ptr;   
         if(dc->is_call){
-	    tb->isCall = 1;
+	    tb->isCall = pc_ptr;
 	    tb->CallNext = dc->callnext;
 	}
         if(dc->is_indirectjmp)
-	    tb->isIndirectJmp = 1;
+	    tb->isIndirectJmp = pc_ptr;
 	if(dc->is_directjmp)
             tb->isDirectJmp = pc_ptr;
         if(dc->is_ret)
