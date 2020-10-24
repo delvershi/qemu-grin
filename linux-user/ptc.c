@@ -220,6 +220,7 @@ target_ulong callnext = 0;
 uint64_t is_indirectjmp = 0;
 uint64_t is_directjmp = 0;
 uint64_t is_ret = 0;
+uint64_t cfi_addr = 0;
 
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
@@ -303,6 +304,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.isRet = &is_ret;
   result.ElfStartStack = &elf_start_stack;
   result.illegalAccessAddr = &illegal_AccessAddr;
+  result.CFIAddr = &cfi_addr;
 
   *output = result;
 
@@ -700,6 +702,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->isIndirectJmp = 0;
     tb->isDirectJmp = 0;
     tb->isRet = 0;
+    tb->CFIAddr = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
       if (ranges[i].start <= pc && pc < ranges[i].end)
@@ -887,6 +890,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     is_indirectjmp = 0;
     is_directjmp = 0;
     is_ret = 0;
+    callnext = 0;
+    cfi_addr = 0;
 
     illegal_AccessAddr = 0;
 
@@ -912,6 +917,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
       is_directjmp = tb->isDirectJmp;
     if(tb->isRet)
       is_ret = tb->isRet;
+    cfi_addr = tb->CFIAddr;
     
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   

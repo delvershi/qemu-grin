@@ -211,6 +211,7 @@ struct TranslationBlock {
     target_ulong isIndirectJmp;
     target_ulong isDirectJmp;
     target_ulong isRet;
+    target_ulong CFIAddr;
 #endif
     
 };

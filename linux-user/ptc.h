@@ -293,6 +293,7 @@ typedef struct {
   uint64_t *isRet;
   uint64_t *ElfStartStack;
   uint64_t *illegalAccessAddr;
+  uint64_t *CFIAddr;
 
 } PTCInterface;
 

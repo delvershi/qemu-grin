@@ -7960,6 +7960,9 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     target_ulong cs_base;
     int num_insns;
     int max_insns;
+#ifdef CONFIG_LIBTINYCODE
+    uint64_t current_pc;
+#endif
 
     /* generate intermediate code */
     pc_start = tb->pc;
@@ -8074,7 +8077,9 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
         }
         if (num_insns + 1 == max_insns && (tb->cflags & CF_LAST_IO))
             gen_io_start();
-
+#ifdef CONFIG_LIBTINYCODE
+        current_pc = pc_ptr;
+#endif
         pc_ptr = disas_insn(env, dc, pc_ptr);
         num_insns++;
 
@@ -8089,8 +8094,10 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	    tb->isIndirectJmp = pc_ptr;
 	if(dc->is_directjmp)
             tb->isDirectJmp = pc_ptr;
-        if(dc->is_ret)
-	    tb->isRet = pc_ptr;	
+        if(dc->is_ret){
+	    tb->isRet = pc_ptr; 
+	    tb->CFIAddr = current_pc;	
+	}
 #endif
 
         /* stop translation if indicated */
