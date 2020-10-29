@@ -1051,10 +1051,12 @@ unsigned long ptc_do_syscall2(void){
       return env->eip;//TARGET_NR_futex
     }
     if(env->regs[R_EAX]==2 ||
+       env->regs[R_EAX]==0 ||
+       env->regs[R_EAX]==4 ||
        env->regs[R_EAX]==3){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"Mask open close syscall\n");
+      fprintf(stderr,"Mask open close read stat syscall\n");
       return env->eip;//TARGET_NR_futex
     }
     if(env->regs[R_EAX]==202){
