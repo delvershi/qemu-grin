@@ -922,10 +922,10 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
   
     if(sigsetjmp(cpu->jmp_env,1)==0){
-      ptc_lockexec(); 
+//      ptc_lockexec(); 
       tc_ptr = tb->tc_ptr;
       cpu_tb_exec(cpu, tc_ptr);
-      ptc_unlockexec();
+//      ptc_unlockexec();
     }
     else{
       ptc_unlockexec(); 
