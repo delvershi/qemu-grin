@@ -998,7 +998,6 @@ uint32_t ptc_is_image_addr(uint64_t va){
   //printf("brk:%lx\n mmap:%lx\n ",info->brk,info->mmap);
   //if(va>=info->start_code && va<=info->end_code)
   //  return 1;
-
   if(va>=info->start_data && va<=info->end_data)
     return 1;
   if(va>=info->end_data && va<brk_page){
@@ -1008,6 +1007,10 @@ uint32_t ptc_is_image_addr(uint64_t va){
                            MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
                            -1,
                            0);
+    
+    if((*(uint64_t *)va) == 0){
+      *(uint64_t *)va = 1;
+    }
     fprintf(stderr,"heap malloc %lx\n",brk_page);
     return 1;
   }
