@@ -1050,11 +1050,11 @@ unsigned long ptc_do_syscall2(void){
     if(env->regs[R_EAX]==5 ||
        env->regs[R_EAX]==6 ||
        env->regs[R_EAX]==0 ||
-       env->regs[R_EAX]==4){ 
-       //env->regs[R_EAX]==3){
+       env->regs[R_EAX]==4 || 
+       env->regs[R_EAX]==2 ){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"Mask open lstat fstat read syscall\n");
+      fprintf(stderr,"Mask open lstat fstat read open syscall\n");
       return env->eip;//TARGET_NR_futex
     }
 
