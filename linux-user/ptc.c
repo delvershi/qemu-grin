@@ -1047,13 +1047,14 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"Mask kill syscall\n");
       return env->eip;//TARGET_NR_futex
     }
-    if(//env->regs[R_EAX]==2 ||
-       env->regs[R_EAX]==0){// ||
-       //env->regs[R_EAX]==4 ||
+    if(env->regs[R_EAX]==5 ||
+       env->regs[R_EAX]==6 ||
+       env->regs[R_EAX]==0 ||
+       env->regs[R_EAX]==4){ 
        //env->regs[R_EAX]==3){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"Mask open close read stat syscall\n");
+      fprintf(stderr,"Mask open lstat fstat read syscall\n");
       return env->eip;//TARGET_NR_futex
     }
 
@@ -1078,10 +1079,12 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"mask syscall\n");
       return env->eip; 
     }
-    if(env->regs[R_EAX]==200){
+    if(env->regs[R_EAX]==200 ||
+       env->regs[R_EAX]==254 ||
+       env->regs[R_EAX]==255){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"tkill syscall\n");
+      fprintf(stderr,"tkill inotify* syscall\n");
       return env->eip;
     }
     if(env->regs[R_EAX]==269){
