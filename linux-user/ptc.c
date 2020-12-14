@@ -1015,8 +1015,8 @@ uint32_t ptc_is_image_addr(uint64_t va){
     return 1;
   }
  
-  if(va<=info->start_stack && va>0x4000000000)
-    return 1;
+  if(va<=info->start_stack && va>0x40007f0000)
+      return 1;
 
   fprintf(stderr,"Unknow address access: %lx\n",va);
   return 0;
