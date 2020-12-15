@@ -1083,10 +1083,11 @@ unsigned long ptc_do_syscall2(void){
     }
     if(env->regs[R_EAX]==200 ||
        env->regs[R_EAX]==254 ||
-       env->regs[R_EAX]==255){
+       env->regs[R_EAX]==255 ||
+       env->regs[R_EAX]==264){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"tkill inotify* syscall\n");
+      fprintf(stderr,"tkill inotify* rename syscall\n");
       return env->eip;
     }
     if(env->regs[R_EAX]==269){
