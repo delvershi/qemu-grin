@@ -1041,10 +1041,12 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"exit syscall\n");
       return 0;
     }
-    if(env->regs[R_EAX]==62){
+    if(env->regs[R_EAX]==62 ||
+       env->regs[R_EAX]==80 ||
+       env->regs[R_EAX]==81){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"Mask kill syscall\n");
+      fprintf(stderr,"Mask kill chdir syscall\n");
       return env->eip;//TARGET_NR_futex
     }
     if(env->regs[R_EAX]==5 ||
