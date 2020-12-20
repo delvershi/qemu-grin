@@ -281,6 +281,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.get_arg_label_id = &ptc_get_arg_label_id;
   result.mmap = &ptc_mmap;
   result.translate = &ptc_translate;
+  result.exec = &ptc_exec;
   result.disassemble = &ptc_disassemble;
   result.do_syscall2 = &ptc_do_syscall2;
   result.storeCPUState = &ptc_storeCPUState;
@@ -877,7 +878,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
 
 /* TODO: error management */
 size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t *dymvirtual_address) {
-//unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t * dymvirtual_address) {
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
 
@@ -941,6 +941,72 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     *dymvirtual_address = env->eip;
     return (size_t) tb->size;
    // return env->eip;
+}
+
+void ptc_exec(uint64_t virtual_address){
+    TCGContext *s = &tcg_ctx;
+    TranslationBlock *tb = NULL;
+
+    uint8_t *tc_ptr;
+    CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+    PTCInstructionList instructions1;
+    PTCInstructionList *instructions = &instructions1;
+
+    is_indirect = 0;
+    is_call = 0;
+    env->eip = virtual_address;
+    is_indirectjmp = 0;
+    is_directjmp = 0;
+    is_ret = 0;
+    callnext = 0;
+    cfi_addr = 0;
+
+    illegal_AccessAddr = 0;
+
+    target_ulong temp;
+    int flags = 0;
+    cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
+
+#if defined(TARGET_S390X)
+    flags |= FLAG_MASK_32 | FLAG_MASK_64;
+#endif
+
+    tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
+
+    if(tb->isIndirect)
+      is_indirect = tb->isIndirect;
+    if(tb->isCall){
+      is_call = tb->isCall;
+      callnext = tb->CallNext;
+    }
+    if(tb->isIndirectJmp)
+      is_indirectjmp = tb->isIndirectJmp;
+    if(tb->isDirectJmp)
+      is_directjmp = tb->isDirectJmp;
+    if(tb->isRet)
+      is_ret = tb->isRet;
+    cfi_addr = tb->CFIAddr;
+    
+   // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
+ 
+  //  tc_ptr = tb->tc_ptr;
+  //  cpu_tb_exec(cpu, tc_ptr);
+
+     if(sigsetjmp(cpu->jmp_env,1)==0){
+//      ptc_lockexec(); 
+      tc_ptr = tb->tc_ptr;
+      cpu_tb_exec(cpu, tc_ptr);
+//      ptc_unlockexec();
+    }
+    else{
+      ptc_unlockexec(); 
+      printf("explore branch:  %lx\n",virtual_address);
+      cpu->exception_index = 11;
+   //   *dymvirtual_address = virtual_address;
+    //  return (size_t) tb->size;
+   // exit(1);
+   // printf("exception_next_eip: %lx\n",env->exception_next_eip);
+    }   //ptc_syscall_next_eip = env->exception_next_eip;
 }
 
 void ptc_deletCPULINEState(void){
