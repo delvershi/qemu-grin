@@ -928,7 +928,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 //      ptc_unlockexec();
     }
     else{
-      ptc_unlockexec(); 
+      //ptc_unlockexec(); 
       printf("explore branch:  %lx\n",virtual_address);
       cpu->exception_index = 11;
       *dymvirtual_address = virtual_address;
@@ -943,7 +943,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // return env->eip;
 }
 
-void ptc_exec(uint64_t virtual_address){
+int64_t ptc_exec(uint64_t virtual_address){
     TCGContext *s = &tcg_ctx;
     TranslationBlock *tb = NULL;
 
@@ -952,16 +952,9 @@ void ptc_exec(uint64_t virtual_address){
     PTCInstructionList instructions1;
     PTCInstructionList *instructions = &instructions1;
 
-    is_indirect = 0;
-    is_call = 0;
     env->eip = virtual_address;
-    is_indirectjmp = 0;
-    is_directjmp = 0;
-    is_ret = 0;
-    callnext = 0;
-    cfi_addr = 0;
 
-    illegal_AccessAddr = 0;
+    //illegal_AccessAddr = 0;
 
     target_ulong temp;
     int flags = 0;
@@ -972,41 +965,17 @@ void ptc_exec(uint64_t virtual_address){
 #endif
 
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
-
-    if(tb->isIndirect)
-      is_indirect = tb->isIndirect;
-    if(tb->isCall){
-      is_call = tb->isCall;
-      callnext = tb->CallNext;
-    }
-    if(tb->isIndirectJmp)
-      is_indirectjmp = tb->isIndirectJmp;
-    if(tb->isDirectJmp)
-      is_directjmp = tb->isDirectJmp;
-    if(tb->isRet)
-      is_ret = tb->isRet;
-    cfi_addr = tb->CFIAddr;
-    
-   // printf("virtual_address: %lx  tb ->pc: %lx\n",virtual_address,tb->pc);
  
-  //  tc_ptr = tb->tc_ptr;
-  //  cpu_tb_exec(cpu, tc_ptr);
-
-     if(sigsetjmp(cpu->jmp_env,1)==0){
-//      ptc_lockexec(); 
+    if(sigsetjmp(cpu->jmp_env,1)==0){ 
       tc_ptr = tb->tc_ptr;
       cpu_tb_exec(cpu, tc_ptr);
-//      ptc_unlockexec();
     }
-    else{
-      ptc_unlockexec(); 
-      printf("explore branch:  %lx\n",virtual_address);
-      cpu->exception_index = 11;
-   //   *dymvirtual_address = virtual_address;
-    //  return (size_t) tb->size;
-   // exit(1);
-   // printf("exception_next_eip: %lx\n",env->exception_next_eip);
-    }   //ptc_syscall_next_eip = env->exception_next_eip;
+    else
+      return -1;
+      
+    //ptc_syscall_next_eip = env->exception_next_eip;
+   
+    return env->eip;
 }
 
 void ptc_deletCPULINEState(void){
