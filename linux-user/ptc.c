@@ -1042,10 +1042,6 @@ uint32_t ptc_is_image_addr(uint64_t va){
                            MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
                            -1,
                            0);
-    
-    if((*(uint64_t *)va) == 0){
-      *(uint64_t *)va = 1;
-    }
     fprintf(stderr,"heap malloc %lx\n",brk_page);
     return 1;
   }
@@ -1076,7 +1072,7 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"exit syscall\n");
       return 0;
     }
-    if(env->regs[R_EAX]==62 ||
+    if(env->regs[R_EAX]==62 || 
        env->regs[R_EAX]==80 ||
        env->regs[R_EAX]==81){
       env->eip = env->exception_next_eip;
@@ -1084,11 +1080,14 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"Mask kill chdir syscall\n");
       return env->eip;//TARGET_NR_futex
     }
-    if(env->regs[R_EAX]==5 ||
-       env->regs[R_EAX]==6 ||
-       env->regs[R_EAX]==0 ||
-       env->regs[R_EAX]==4 || 
-       env->regs[R_EAX]==2 ){
+    if(
+      env->regs[R_EAX]==5 ||
+      env->regs[R_EAX]==6 ||
+      env->regs[R_EAX]==4 || 
+      env->regs[R_EAX]==3 
+//      env->regs[R_EAX]==2 ||
+//      env->regs[R_EAX]==0 
+      ){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
       fprintf(stderr,"Mask open lstat fstat read open syscall\n");
@@ -1100,12 +1099,6 @@ unsigned long ptc_do_syscall2(void){
       cpu->exception_index = -1;
       fprintf(stderr,"NR futex syscall\n");
       return env->eip;//TARGET_NR_futex
-    }
-    if(env->regs[R_EAX]==3){
-      env->eip = env->exception_next_eip;
-      cpu->exception_index = -1;
-      fprintf(stderr,"closed errno syscall\n");
-      return env->eip;
     }
     if(env->regs[R_EAX]==13 ||
        env->regs[R_EAX]==14 ||
