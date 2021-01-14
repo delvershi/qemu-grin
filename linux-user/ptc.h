@@ -251,6 +251,8 @@ EXPORTED(unsigned long, ptc_do_syscall2, (void));
 EXPORTED(uint32_t, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(void,ptc_deletCPULINEState,(void));
+EXPORTED(void,ptc_recoverStack,(void));
+EXPORTED(void,ptc_storeStack,(void));
 EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));
 EXPORTED(uint32_t,ptc_isValidExecuteAddr,(uint64_t va));
 EXPORTED(void,ptc_lockexec,(void));
@@ -271,6 +273,8 @@ typedef struct {
   ptc_storeCPUState_ptr_t storeCPUState;
   ptc_getBranchCPUeip_ptr_t getBranchCPUeip;
   ptc_deletCPULINEState_ptr_t deletCPULINEState;
+  ptc_recoverStack_ptr_t recoverStack;
+  ptc_storeStack_ptr_t storeStack;
   ptc_is_image_addr_ptr_t is_image_addr;
   ptc_isValidExecuteAddr_ptr_t isValidExecuteAddr;
 
@@ -295,6 +299,7 @@ typedef struct {
   uint64_t *ElfStartStack;
   uint64_t *illegalAccessAddr;
   uint64_t *CFIAddr;
+  uint64_t *isSyscall;
 
 } PTCInterface;
 

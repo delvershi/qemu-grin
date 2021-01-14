@@ -221,12 +221,14 @@ uint64_t is_indirectjmp = 0;
 uint64_t is_directjmp = 0;
 uint64_t is_ret = 0;
 uint64_t cfi_addr = 0;
+uint64_t is_syscall = 0;
 
 static unsigned long cs_base = 0;
 static CPUState *cpu = NULL;
 
 uint64_t CodeStartAddress = 0;
 size_t CodeSize = 0;
+void *current_stack = NULL;
 
 #if defined(TARGET_X86_64) || defined(TARGET_I386)
 # define CPU_STRUCT X86CPU
@@ -287,6 +289,8 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.storeCPUState = &ptc_storeCPUState;
   result.getBranchCPUeip = &ptc_getBranchCPUeip;
   result.deletCPULINEState = &ptc_deletCPULINEState;
+  result.recoverStack = &ptc_recoverStack;
+  result.storeStack = &ptc_storeStack;
   result.is_image_addr = &ptc_is_image_addr;
   result.isValidExecuteAddr = &ptc_isValidExecuteAddr;
 
@@ -306,6 +310,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.ElfStartStack = &elf_start_stack;
   result.illegalAccessAddr = &illegal_AccessAddr;
   result.CFIAddr = &cfi_addr;
+  result.isSyscall = &is_syscall;
 
   *output = result;
 
@@ -887,6 +892,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
     is_indirect = 0;
     is_call = 0;
     env->eip = virtual_address;
+    
+    is_syscall = 0;
     is_indirectjmp = 0;
     is_directjmp = 0;
     is_ret = 0;
@@ -911,6 +918,8 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
       is_call = tb->isCall;
       callnext = tb->CallNext;
     }
+    if(tb->isSyscall)
+      is_syscall = tb->isSyscall;
     if(tb->isIndirectJmp)
       is_indirectjmp = tb->isIndirectJmp;
     if(tb->isDirectJmp)
@@ -1025,6 +1034,23 @@ uint32_t ptc_storeCPUState(void) {
   return 1;
 }
 
+void ptc_recoverStack(void){
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+  memcpy((void *)env->regs[4],current_stack,elf_start_stack-(abi_ulong)env->regs[4]);
+  free(current_stack);
+}
+
+void ptc_storeStack(void){
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+  current_stack = (void *)malloc(elf_start_stack - (abi_ulong)env->regs[4]);
+  if(current_stack==NULL){
+    fprintf(stderr,"Alloc stack memory failed!\n");
+    fprintf(stderr,"rsp: %lx   elfstack: %lx\n",env->regs[4],elf_start_stack);
+    exit(0);
+  }
+  memcpy(current_stack,(void *)env->regs[4],elf_start_stack - (abi_ulong)env->regs[4]);
+}
+
 void ptc_getBranchCPUeip(void){ 
   traversArchCPUStateQueueLine();
 }
@@ -1072,12 +1098,13 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"exit syscall\n");
       return 0;
     }
-    if(env->regs[R_EAX]==62 || 
+    if(env->regs[R_EAX]==59 ||
+       env->regs[R_EAX]==62 || 
        env->regs[R_EAX]==80 ||
        env->regs[R_EAX]==81){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"Mask kill chdir syscall\n");
+      fprintf(stderr,"Mask execve kill chdir syscall\n");
       return env->eip;//TARGET_NR_futex
     }
     if(
@@ -1112,10 +1139,12 @@ unsigned long ptc_do_syscall2(void){
     if(env->regs[R_EAX]==200 ||
        env->regs[R_EAX]==254 ||
        env->regs[R_EAX]==255 ||
+       env->regs[R_EAX]==262 ||
+       env->regs[R_EAX]==260 ||
        env->regs[R_EAX]==264){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
-      fprintf(stderr,"tkill inotify* rename syscall\n");
+      fprintf(stderr,"tkill inotify* newfstatat rename fchownat syscall\n");
       return env->eip;
     }
     if(env->regs[R_EAX]==269){

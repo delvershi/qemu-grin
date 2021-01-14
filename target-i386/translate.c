@@ -102,6 +102,7 @@ typedef struct DisasContext {
     int is_indirectjmp; /* 1 = means have indirect jmp */
     int is_directjmp; /* 1 = means have direct jmp */
     int is_ret; /* 1 = means have ret */
+    int is_syscall;
 #endif 
 
     /* current block context */
@@ -7161,6 +7162,9 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
 //#ifndef CONFIG_LIBTINYCODE
         gen_eob(s);
 //#endif
+#ifdef CONFIG_LIBTINYCODE
+        s->is_syscall = 1;
+#endif
         break;
     case 0x107: /* sysret */
         if (!s->pe) {
@@ -8042,6 +8046,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     dc->is_indirectjmp = 0;
     dc->is_directjmp = 0;
     dc->is_ret = 0;
+    dc->is_syscall = 0;
 #endif
 
     dc->is_jmp = DISAS_NEXT;
@@ -8098,6 +8103,8 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	    tb->isRet = pc_ptr; 
 	    tb->CFIAddr = current_pc;	
 	}
+        if(dc->is_syscall)
+            tb->isSyscall = pc_ptr;
 #endif
 
         /* stop translation if indicated */
