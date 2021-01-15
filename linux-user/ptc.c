@@ -334,9 +334,8 @@ static void sig_handle(int signum, siginfo_t* siginfo, void* context){
   siglongjmp(cpu->jmp_env,1);
 }
 
-void ptc_init(const char *ptc_filename, const char *exe_args){
+void ptc_init(const char *filename, const char *exe_args){
   int i = 0;
-   char filename[60]; 
 //////
    char **target_environ, **wrk;
    char **target_argv;
@@ -348,7 +347,7 @@ void ptc_init(const char *ptc_filename, const char *exe_args){
    envlist_t *envlist;
    struct target_pt_regs regs1, *regs = &regs1;
 
-   char *exeArgs = calloc(1, sizeof(char *));  
+   char *exeArgs = calloc(strlen(exe_args)+1, sizeof(char));  
    if (exeArgs == NULL) {
        (void) fprintf(stderr, "Unable to allocate memory for target_argv\n");
        exit(1);
@@ -360,7 +359,6 @@ void ptc_init(const char *ptc_filename, const char *exe_args){
    memset(info, 0, sizeof(struct image_info));
    memset(&bprm, 0, sizeof (bprm));
 //   CPUState *cpu = CPU(x86_env_get_cpu(env));
-   strcpy(filename, ptc_filename);
    exec_path = filename;
 //////
 
