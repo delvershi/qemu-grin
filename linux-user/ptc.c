@@ -334,9 +334,9 @@ static void sig_handle(int signum, siginfo_t* siginfo, void* context){
   siglongjmp(cpu->jmp_env,1);
 }
 
-void ptc_init(const char *filename, const char *exe_args){
+void ptc_init(const char *ptc_filename, const char *exe_args){
   int i = 0;
-
+   char filename[60]; 
 //////
    char **target_environ, **wrk;
    char **target_argv;
@@ -360,6 +360,7 @@ void ptc_init(const char *filename, const char *exe_args){
    memset(info, 0, sizeof(struct image_info));
    memset(&bprm, 0, sizeof (bprm));
 //   CPUState *cpu = CPU(x86_env_get_cpu(env));
+   strcpy(filename, ptc_filename);
    exec_path = filename;
 //////
 
