@@ -250,7 +250,7 @@ EXPORTED(int64_t, ptc_exec, (uint64_t va));
 EXPORTED(unsigned long, ptc_do_syscall2, (void));
 EXPORTED(uint32_t, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
-EXPORTED(void,ptc_deletCPULINEState,(void));
+EXPORTED(uint32_t, ptc_deletCPULINEState,(void));
 EXPORTED(void,ptc_recoverStack,(void));
 EXPORTED(void,ptc_storeStack,(void));
 EXPORTED(uint32_t,ptc_is_image_addr,(uint64_t va));

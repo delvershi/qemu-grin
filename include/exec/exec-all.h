@@ -66,6 +66,7 @@ void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data,void *elf_s
 int isEmpty(void);
 BranchState deletArchCPUStateQueueLine(void);
 void traversArchCPUStateQueueLine(void);
+uint32_t numsArchCPUStateQueueLine(void);
 
 #endif
 

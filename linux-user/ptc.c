@@ -986,7 +986,7 @@ int64_t ptc_exec(uint64_t virtual_address){
     return env->eip;
 }
 
-void ptc_deletCPULINEState(void){
+uint32_t ptc_deletCPULINEState(void){
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   BranchState datatmp;
   datatmp = deletArchCPUStateQueueLine();
@@ -1001,6 +1001,8 @@ void ptc_deletCPULINEState(void){
   /* Load ELF stack segments */
   memcpy((void *)env->regs[4],datatmp.elf_stack,elf_start_stack-(abi_ulong)env->regs[4]);
   free(datatmp.elf_stack);
+
+  return 0;
 }
 
 uint32_t ptc_storeCPUState(void) {
@@ -1303,4 +1305,12 @@ void traversArchCPUStateQueueLine(void) {
   }
 }
 
-
+uint32_t numsArchCPUStateQueueLine(void) {
+  QueuePtr p = CPUQueueLine.front->next;
+  uint32_t num = 0;
+  while(p!=NULL){
+    num++;
+    p = p->next;
+  }
+  return num;
+}
