@@ -1261,6 +1261,7 @@ void insertArchCPUStateQueueLine(CPUArchState element,void *elf_data,void *elf_s
   QueuePtr q = (QueuePtr)malloc(sizeof(QNode));
   if(q == NULL){
     fprintf(stderr,"Alloca queue node failed!\n");
+    exit(0);
   }
   q->data.cpu_data = element;
   q->data.elf_data = elf_data;

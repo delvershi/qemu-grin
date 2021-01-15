@@ -1922,6 +1922,7 @@ static void tcg_reg_alloc_mov(TCGContext *s, const TCGOpDef *def,
         /* The code in the first if block should have moved the
            temp to a register. */
         assert(ts->val_type == TEMP_VAL_REG);
+
         if (IS_DEAD_ARG(1) && !ts->fixed_reg && !ots->fixed_reg) {
             /* the mov can be suppressed */
             if (ots->val_type == TEMP_VAL_REG) {
@@ -2000,6 +2001,7 @@ static void tcg_reg_alloc_op(TCGContext *s,
             }
         }
         assert(ts->val_type == TEMP_VAL_REG);
+
         if (arg_ct->ct & TCG_CT_IALIAS) {
             if (ts->fixed_reg) {
                 /* if fixed register, we must allocate a new register
@@ -2415,7 +2417,6 @@ int tcg_gen_code(TCGContext *s, tcg_insn_unit *gen_code_buf)
         }
     }
 #endif
-
     tcg_gen_code_common(s, gen_code_buf, -1);
 
     /* flush instruction cache */
