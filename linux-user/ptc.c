@@ -1047,7 +1047,7 @@ void ptc_storeStack(void){
   if(current_stack==NULL){
     fprintf(stderr,"Alloc stack memory failed!\n");
     fprintf(stderr,"rsp: %lx   elfstack: %lx\n",env->regs[4],elf_start_stack);
-    exit(0);
+    abort();
   }
   memcpy(current_stack,(void *)env->regs[4],elf_start_stack - (abi_ulong)env->regs[4]);
 }
