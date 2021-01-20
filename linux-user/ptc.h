@@ -247,7 +247,7 @@ EXPORTED(unsigned, ptc_get_arg_label_id, (PTCInstructionArg arg));
 EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t code_size));
 EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 EXPORTED(int64_t, ptc_exec, (uint64_t va));
-EXPORTED(unsigned long, ptc_do_syscall2, (void));
+EXPORTED(unsigned long, ptc_do_syscall2, (bool mask));
 EXPORTED(uint32_t, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
 EXPORTED(uint32_t, ptc_deletCPULINEState,(void));

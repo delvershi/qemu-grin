@@ -1093,7 +1093,7 @@ uint32_t ptc_isValidExecuteAddr(uint64_t va){
   return 0;
 }
 
-unsigned long ptc_do_syscall2(void){
+unsigned long ptc_do_syscall2(bool SPECGcc){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
 
     if(env->regs[R_EAX]==231 ||
@@ -1112,34 +1112,51 @@ unsigned long ptc_do_syscall2(void){
       fprintf(stderr,"Mask execve kill chdir syscall\n");
       return env->eip;//TARGET_NR_futex
     }
-    if(
-      env->regs[R_EAX]==5 ||
-      env->regs[R_EAX]==6 ||
-      env->regs[R_EAX]==4 || 
-      env->regs[R_EAX]==3 
-//      env->regs[R_EAX]==2 ||
-//      env->regs[R_EAX]==0 
-      ){
-      env->eip = env->exception_next_eip;
-      cpu->exception_index = -1;
-      fprintf(stderr,"Mask open lstat fstat read open syscall\n");
-      return env->eip;//TARGET_NR_futex
+    if(SPECGcc){
+        if(
+          env->regs[R_EAX]==6 ||
+          env->regs[R_EAX]==3 
+          ){
+          env->eip = env->exception_next_eip;
+          cpu->exception_index = -1;
+          fprintf(stderr,"Mask open lstat fstat read open syscall\n");
+          return env->eip;//TARGET_NR_futex
+        }
+        if(env->regs[R_EAX]==15 ||
+           env->regs[R_EAX]==11){
+          env->eip = env->exception_next_eip;
+          cpu->exception_index = -1; 
+          fprintf(stderr,"mask syscall\n");
+          return env->eip; 
+        }
+    }else{
+        if(
+          env->regs[R_EAX]==5 ||
+          env->regs[R_EAX]==6 ||
+          env->regs[R_EAX]==4 || 
+          env->regs[R_EAX]==3 
+    //      env->regs[R_EAX]==0 
+          ){
+          env->eip = env->exception_next_eip;
+          cpu->exception_index = -1;
+          fprintf(stderr,"Mask open lstat fstat read open syscall\n");
+          return env->eip;//TARGET_NR_futex
+        }
+        if(env->regs[R_EAX]==13 ||
+           env->regs[R_EAX]==14 ||
+           env->regs[R_EAX]==15 ||
+           env->regs[R_EAX]==11){
+          env->eip = env->exception_next_eip;
+          cpu->exception_index = -1; 
+          fprintf(stderr,"mask syscall\n");
+          return env->eip; 
+        }
     }
-
     if(env->regs[R_EAX]==202){
       env->eip = env->exception_next_eip;
       cpu->exception_index = -1;
       fprintf(stderr,"NR futex syscall\n");
       return env->eip;//TARGET_NR_futex
-    }
-    if(env->regs[R_EAX]==13 ||
-       env->regs[R_EAX]==14 ||
-       env->regs[R_EAX]==15 ||
-       env->regs[R_EAX]==11){
-      env->eip = env->exception_next_eip;
-      cpu->exception_index = -1; 
-      fprintf(stderr,"mask syscall\n");
-      return env->eip; 
     }
     if(env->regs[R_EAX]==200 ||
        env->regs[R_EAX]==254 ||
