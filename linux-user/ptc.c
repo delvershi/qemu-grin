@@ -1135,7 +1135,6 @@ unsigned long ptc_do_syscall2(bool SPECGcc){
           env->regs[R_EAX]==6 ||
           env->regs[R_EAX]==4 || 
           env->regs[R_EAX]==3 
-    //      env->regs[R_EAX]==0 
           ){
           env->eip = env->exception_next_eip;
           cpu->exception_index = -1;
