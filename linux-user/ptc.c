@@ -977,6 +977,8 @@ int64_t ptc_exec(uint64_t virtual_address){
         tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
         cpu->tb_jmp_cache[tb_jmp_cache_hash_func((target_ulong) virtual_address)] = tb;
     }
+    if(tb->isSyscall)
+      return -1;
  
     if(sigsetjmp(cpu->jmp_env,1)==0){ 
       tc_ptr = tb->tc_ptr;
