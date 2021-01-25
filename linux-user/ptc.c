@@ -984,13 +984,9 @@ int64_t ptc_exec(uint64_t virtual_address){
       tc_ptr = tb->tc_ptr;
       cpu_tb_exec(cpu, tc_ptr);
     }
-    else{
-      cpu->exception_index = -1;
+    else
       return -1;
-    }
-      
-    //ptc_syscall_next_eip = env->exception_next_eip;
-    cpu->exception_index = -1;
+    
     return env->eip;
 }
 
