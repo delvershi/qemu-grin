@@ -230,6 +230,7 @@ uint64_t CodeStartAddress = 0;
 size_t CodeSize = 0;
 void *current_stack = NULL;
 void *current_data = NULL;
+void *current_code = NULL;
 
 #if defined(TARGET_X86_64) || defined(TARGET_I386)
 # define CPU_STRUCT X86CPU
@@ -1047,6 +1048,9 @@ void ptc_recoverStack(void){
 
   memcpy((void *)elf_start_data,current_data,elf_end_data - elf_start_data);
   free(current_data);
+
+  memcpy((void *)info->start_code,current_code,info->end_code - info->start_code);
+  free(current_code); 
 }
 
 void ptc_storeStack(void){
@@ -1066,6 +1070,14 @@ void ptc_storeStack(void){
     abort();
   }
   memcpy(current_data,(void *)elf_start_data,elf_end_data - elf_start_data);
+
+  current_code = (void *)malloc(info->end_code - info->start_code);
+  if(current_code==NULL){
+    fprintf(stderr,"Alloc current data segment memory failed!\n");
+    fprintf(stderr,"start data: %lx   end code: %lx\n",info->start_code,info->end_code);
+    abort();
+  }
+  memcpy(current_code,(void *)info->start_code,info->end_code - info->start_code);
 }
 
 void ptc_getBranchCPUeip(void){ 
