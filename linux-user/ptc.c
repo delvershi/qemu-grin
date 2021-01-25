@@ -1049,7 +1049,7 @@ void ptc_recoverStack(void){
   memcpy((void *)elf_start_data,current_data,elf_end_data - elf_start_data);
   free(current_data);
 
-  memcpy((void *)info->start_code,current_code,info->end_code - info->start_code);
+  memcpy((void *)elf_end_data,current_code,brk_page - elf_end_data);
   free(current_code); 
 }
 
@@ -1071,13 +1071,13 @@ void ptc_storeStack(void){
   }
   memcpy(current_data,(void *)elf_start_data,elf_end_data - elf_start_data);
 
-  current_code = (void *)malloc(info->end_code - info->start_code);
+  current_code = (void *)malloc(brk_page - elf_end_data);
   if(current_code==NULL){
     fprintf(stderr,"Alloc current data segment memory failed!\n");
     fprintf(stderr,"start data: %lx   end code: %lx\n",info->start_code,info->end_code);
     abort();
   }
-  memcpy(current_code,(void *)info->start_code,info->end_code - info->start_code);
+  memcpy(current_code,(void *)elf_end_data,brk_page - elf_end_data);
 }
 
 void ptc_getBranchCPUeip(void){ 
