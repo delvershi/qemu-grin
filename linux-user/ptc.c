@@ -293,6 +293,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.deletCPULINEState = &ptc_deletCPULINEState;
   result.recoverStack = &ptc_recoverStack;
   result.storeStack = &ptc_storeStack;
+  result.is_stack_addr = &ptc_is_stack_addr;
   result.is_image_addr = &ptc_is_image_addr;
   result.isValidExecuteAddr = &ptc_isValidExecuteAddr;
 
@@ -1082,6 +1083,14 @@ void ptc_storeStack(void){
 
 void ptc_getBranchCPUeip(void){ 
   traversArchCPUStateQueueLine();
+}
+
+uint32_t ptc_is_stack_addr(uint64_t va){
+  if(va<=info->start_stack && va>0x4000700000)
+      return 1;
+
+  fprintf(stderr,"Unknow address access: %lx\n",va);
+  return 0;
 }
 
 uint32_t ptc_is_image_addr(uint64_t va){
