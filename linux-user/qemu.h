@@ -48,6 +48,10 @@ struct image_info {
         abi_ulong       arg_start;
         abi_ulong       arg_end;
         uint32_t        elf_flags;
+         /*********************************************************
+		  *@syy:load the runtime entry of the dynamic binary                                 *********************************************************/
+		uint64_t binary_EP;
+
 	int		personality;
 #ifdef CONFIG_USE_FDPIC
         abi_ulong       loadmap_addr;

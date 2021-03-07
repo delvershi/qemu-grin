@@ -247,6 +247,8 @@ EXPORTED(unsigned, ptc_get_arg_label_id, (PTCInstructionArg arg));
 EXPORTED(void, ptc_mmap, (uint64_t virtual_address, const void *code, size_t code_size));
 EXPORTED(size_t, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
 //EXPORTED(unsigned long, ptc_translate, (uint64_t va, PTCInstructionList *instructions,uint64_t *dym));
+//@syy add ptc_run_loader
+EXPORTED(void, ptc_run_loader, (uint64_t va));
 EXPORTED(unsigned long, ptc_do_syscall2, (void));
 EXPORTED(uint32_t, ptc_storeCPUState, (void));
 EXPORTED(void, ptc_getBranchCPUeip,(void));
@@ -264,6 +266,7 @@ typedef struct {
   ptc_get_arg_label_id_ptr_t get_arg_label_id;
   ptc_mmap_ptr_t mmap;
   ptc_translate_ptr_t translate;
+  ptc_run_loader_ptr_t run_loader;
   ptc_disassemble_ptr_t disassemble;
  
   ptc_do_syscall2_ptr_t do_syscall2;
@@ -294,6 +297,10 @@ typedef struct {
   uint64_t *ElfStartStack;
   uint64_t *illegalAccessAddr;
   uint64_t *CFIAddr;
+
+    /*********************************************************
+	 *@syy:load the runtime entry of the dynamic binary                                 *********************************************************/
+    uint64_t binary_EP;
 
 } PTCInterface;
 

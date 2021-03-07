@@ -79,6 +79,11 @@ unsigned long guest_stack_size = 8*1024*1024UL;
 THREAD CPUState *thread_cpu;
 const char *exec_path;
 
+/*********************************************************
+ * *@syy:load the runtime entry of the dynamic binary                                     
+ * *********************************************************/
+uint64_t binary_EP;
+
 void gemu_log(const char *fmt, ...)
 {
     va_list ap;
@@ -281,6 +286,7 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.get_arg_label_id = &ptc_get_arg_label_id;
   result.mmap = &ptc_mmap;
   result.translate = &ptc_translate;
+  result.run_loader = &ptc_run_loader;
   result.disassemble = &ptc_disassemble;
   result.do_syscall2 = &ptc_do_syscall2;
   result.storeCPUState = &ptc_storeCPUState;
@@ -306,6 +312,10 @@ int ptc_load(void *handle, PTCInterface *output, const char *ptc_filename,
   result.illegalAccessAddr = &illegal_AccessAddr;
   result.CFIAddr = &cfi_addr;
 
+  /****************************************
+  * @syy save the entry address of dynamic elf                                      * *************************************/
+  result.binary_EP = binary_EP;
+  
   *output = result;
 
   return 0;
@@ -486,6 +496,10 @@ void ptc_init(const char *filename, const char *exe_args){
    elf_end_data = info->end_data;
    /* Get Stack segment */
    elf_start_stack = info->start_stack; 
+
+   /*********************************************************
+    *@syy:load the runtime entry of the dynamic binary                                *********************************************************/                 
+   binary_EP = info->binary_EP;
 
    /* Set signal to do with SIGSEGV */
    act.sa_sigaction = sig_handle;
@@ -703,6 +717,7 @@ static TranslationBlock *tb_gen_code2(TCGContext *s, CPUState *cpu,
     tb->isDirectJmp = 0;
     tb->isRet = 0;
     tb->CFIAddr = 0;
+	tb->isHLT = 0;
 
     for (i = 0; i < MAX_RANGES; i++)
       if (ranges[i].start <= pc && pc < ranges[i].end)
@@ -875,6 +890,67 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr)
 
 }
 
+/****************************************
+ * @syy do syscall using by loader and library
+ * *************************************/
+unsigned long ptc_do_syscall_library(void){
+	CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+	if(env->regs[R_EAX]!=10)
+	{
+		env->regs[R_EAX] = do_syscall(env,
+				                  env->regs[R_EAX],
+								  env->regs[R_EDI],
+								  env->regs[R_ESI],
+								  env->regs[R_EDX],
+								  env->regs[10],
+								  env->regs[8],
+								  env->regs[9],
+								  0,0);
+	}
+	env->eip = env->exception_next_eip;
+	cpu->exception_index = -1; 
+				    
+	// Deal with CPUX86State->df, I don't know why do this?   
+	CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+	env->df = 1 - (2 * ((env->eflags >> 10) & 1));
+	CC_OP = CC_OP_EFLAGS;
+	env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+					
+	return env->eip;
+}
+
+/*******************************
+ *@syy translate_library
+ * **************************/
+void ptc_run_loader(uint64_t virtual_address)
+{
+	CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+	TranslationBlock *tb = NULL;
+	target_ulong pc;
+	target_ulong cs_base;
+	int flags = 0;
+	uint8_t *tc_ptr;
+	while(env->eip != virtual_address)
+	{
+		cpu_get_tb_cpu_state(cpu->env_ptr, &pc, &cs_base, &flags);
+
+		tb = tb_gen_code(cpu, pc, cs_base, flags, 0);
+		trace_exec_tb(tb,tb->pc);
+
+		if(sigsetjmp(cpu->jmp_env,1)==0){
+			tc_ptr = tb->tc_ptr;
+			cpu_tb_exec(cpu, tc_ptr);
+		}else{
+			printf("eip: %lx\n",env->eip);
+			exit(1);
+		}
+		if(cpu->exception_index==0x100){                                 
+			ptc_do_syscall_library();
+		}
+	}
+}
+
+
 /* TODO: error management */
 size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t *dymvirtual_address) {
 //unsigned long ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions, uint64_t * dymvirtual_address) {
@@ -886,7 +962,7 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
     is_indirect = 0;
     is_call = 0;
-    env->eip = virtual_address;
+    //env->eip = virtual_address;
     is_indirectjmp = 0;
     is_directjmp = 0;
     is_ret = 0;
@@ -897,13 +973,31 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
 
     target_ulong temp;
     int flags = 0;
-    cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
 
 #if defined(TARGET_S390X)
     flags |= FLAG_MASK_32 | FLAG_MASK_64;
 #endif
 
+	/***********************
+	* @syy whether the code is loader 
+	**************************/
+
+	/*while(env->eip > ranges[0].end && (env->eip < 0x7ffffffff000))
+	{
+		ptc_translate_library();
+	}*/
+	env->eip = virtual_address;
+    cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
     tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
+
+	//
+	//if(tb->isHLT)
+	//{
+		//virtual_address = virtual_address + 0x1;
+		//env->eip = virtual_address;
+		//cpu_get_tb_cpu_state(cpu->env_ptr, &temp, &temp, &flags);
+		//tb = tb_gen_code2(s, cpu, (target_ulong) virtual_address, cs_base, flags, 0,instructions);
+	//}
 
     if(tb->isIndirect)
       is_indirect = tb->isIndirect;
@@ -936,9 +1030,23 @@ size_t ptc_translate(uint64_t virtual_address, PTCInstructionList *instructions,
    // exit(1);
    // printf("exception_next_eip: %lx\n",env->exception_next_eip);
     }
-    ptc_syscall_next_eip = env->exception_next_eip;
+    
+    /***********************
+	 *@syy whether the code is library
+	 * ***********************/
+   /*	while((env->eip > ranges[0].end) && (env->eip < 0x7ffffffff000))
+	{
+		ptc_translate_library();
+	}*/
+	
+	ptc_syscall_next_eip = env->exception_next_eip;
 
     *dymvirtual_address = env->eip;
+	/*******************************
+	 *@syy if the instr is hlt,jump it
+	 * ***************************/
+	if(tb->isHLT)
+		*dymvirtual_address = *dymvirtual_address + 0x1;
     return (size_t) tb->size;
    // return env->eip;
 }
@@ -951,8 +1059,16 @@ void ptc_deletCPULINEState(void){
   fprintf(stderr,"load......... CPU %lx\n",env->eip);
   fprintf(stderr,"load......... rax %lx\n",env->regs[0]);
   fprintf(stderr,"load......... rsp %lx\n",env->regs[4]);
-  
+
+ // void *pdata = (void *)malloc(elf_endmemory_data - elf_pagestart_data);
+  //memcpy(pdata,datatmp.elf_data,elf_endmemory_data - elf_pagestart_data);
+  //memcpy((void *)0x4000201000,datatmp.elf_data,5);
+  //const char src[50] = "http://www.runoob.com";
+  //memcpy((void *)0x4000200fff,(const void *)src,5);
+  //memcpy(pdata,src,51);
+  //memcpy((void *)elf_start_data,src,51);
   /* Load ELF data segments */
+  //memcpy((void *)0x4000200fff,datatmp.elf_data,625);
   memcpy((void *)elf_start_data,datatmp.elf_data,elf_end_data - elf_start_data);
   free(datatmp.elf_data);
   /* Load ELF stack segments */
@@ -1012,7 +1128,8 @@ uint32_t ptc_is_image_addr(uint64_t va){
     return 1;
   }
  
-  if(va<=info->start_stack && va>=0x4000000000)
+  //if(va<=info->start_stack && va>=0x4000000000)
+  if(va<=info->start_stack && va>=0x50000000)
     return 1;
 
   fprintf(stderr,"Unknow address access: %lx\n",va);
@@ -1027,6 +1144,7 @@ uint32_t ptc_isValidExecuteAddr(uint64_t va){
 
   return 0;
 }
+
 
 unsigned long ptc_do_syscall2(void){
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;

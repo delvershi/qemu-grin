@@ -204,6 +204,7 @@ static int mmap_frag(abi_ulong real_start,
 #endif
 abi_ulong mmap_next_start = TASK_UNMAPPED_BASE;
 
+
 unsigned long last_brk;
 
 #ifdef CONFIG_USE_GUEST_BASE
@@ -269,6 +270,10 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
 
     /* If 'start' == 0, then a default start address is used. */
     if (start == 0) {
+		//@syy change the base address
+		#ifdef CONFIG_LIBTINYCODE
+			mmap_next_start = 0x50000000;
+		#endif
         start = mmap_next_start;
     } else {
         start &= qemu_host_page_mask;

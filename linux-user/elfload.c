@@ -2206,6 +2206,11 @@ int load_elf_binary(struct linux_binprm *bprm, struct image_info *info)
     load_elf_image(bprm->filename, bprm->fd, info,
                    &elf_interpreter, bprm->buf);
 
+	/***********************************
+	 *@syy save the binary entry
+	 * **********************************/
+	info->binary_EP = info->entry;
+
     /* ??? We need a copy of the elf header for passing to create_elf_tables.
        If we do nothing, we'll have overwritten this when we re-use bprm->buf
        when we load the interpreter.  */

@@ -102,6 +102,7 @@ typedef struct DisasContext {
     int is_indirectjmp; /* 1 = means have indirect jmp */
     int is_directjmp; /* 1 = means have direct jmp */
     int is_ret; /* 1 = means have ret */
+	int is_hlt; /* 1 = means have hlt */
 #endif 
 
     /* current block context */
@@ -4446,6 +4447,12 @@ static target_ulong disas_insn(CPUX86State *env, DisasContext *s,
     s->pc++;
     /* Collect prefixes.  */
     switch (b) {
+	//@syy
+	#ifdef CONFIG_LIBTINYCODE
+	case 0xf4:
+		s->is_hlt = 1;
+		break;
+	#endif
     case 0xf3:
         prefixes |= PREFIX_REPZ;
         goto next_byte;
@@ -8042,6 +8049,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
     dc->is_indirectjmp = 0;
     dc->is_directjmp = 0;
     dc->is_ret = 0;
+	dc->is_hlt = 0;
 #endif
 
     dc->is_jmp = DISAS_NEXT;
@@ -8098,6 +8106,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
 	    tb->isRet = pc_ptr; 
 	    tb->CFIAddr = current_pc;	
 	}
+		tb->isHLT = dc->is_hlt;
 #endif
 
         /* stop translation if indicated */
